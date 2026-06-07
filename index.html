@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T&amp;C Dashboard — DP World</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --sidebar-w: 260px;
+  --bg: #f8f9fa;
+  --card-shadow: 0 20px 27px 0 rgba(0,0,0,.05);
+  --radius: 1rem;
+  --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --text-dark: #344767;
+  --text-muted: #7b809a;
+  --border: #e9ecef;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text-dark);display:flex;min-height:100vh}
+
+/* ── SIDEBAR ─────────────────────────────────── */
+.sidebar{
+  width:var(--sidebar-w);min-height:100vh;
+  background:linear-gradient(195deg,#42424a,#191919);
+  position:fixed;top:0;left:0;z-index:200;
+  display:flex;flex-direction:column;padding:1.5rem 1rem;
+  box-shadow:0 4px 6px -1px rgba(0,0,0,.3);
+}
+.sidebar-logo{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.75rem 1rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.1);
+  margin-bottom:1.5rem;
+}
+.sidebar-logo-box{
+  width:2.25rem;height:2.25rem;border-radius:.6rem;
+  background:linear-gradient(195deg,#49a3f1,#1A73E8);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.sidebar-logo-box svg{width:1.2rem;height:1.2rem;fill:none;stroke:white;stroke-width:2px;stroke-linecap:round;stroke-linejoin:round}
+.sidebar-brand{color:white;font-size:.9rem;font-weight:700;line-height:1.2}
+.sidebar-brand span{display:block;font-size:.7rem;font-weight:400;opacity:.7}
+.nav-section-label{
+  color:rgba(255,255,255,.4);font-size:.65rem;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;padding:.5rem 1rem .3rem;
+}
+.nav-link{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.6rem 1rem;border-radius:.6rem;
+  color:rgba(255,255,255,.7);font-size:.82rem;font-weight:500;
+  cursor:pointer;transition:all .2s;margin-bottom:.15rem;
+  user-select:none;
+}
+.nav-link:hover{background:rgba(255,255,255,.1);color:white}
+.nav-link.active{background:white;color:#344767;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.nav-link svg{width:1rem;height:1rem;flex-shrink:0;opacity:.8;fill:none;stroke:rgba(255,255,255,.7);stroke-width:2px;stroke-linecap:round;stroke-linejoin:round}
+.nav-link.active svg{opacity:1;stroke:#344767}
+.sidebar-footer{
+  margin-top:auto;padding-top:1rem;
+  border-top:1px solid rgba(255,255,255,.1);
+}
+.refresh-status{
+  display:flex;align-items:center;gap:.5rem;
+  font-size:.72rem;color:rgba(255,255,255,.5);
+  padding:.5rem 1rem;
+}
+.pulse{
+  width:.5rem;height:.5rem;border-radius:50%;background:#82d616;flex-shrink:0;
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.2)}}
+
+/* ── MAIN LAYOUT ─────────────────────────────── */
+.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column}
+
+.topbar{
+  background:rgba(255,255,255,.9);backdrop-filter:blur(8px);
+  padding:.9rem 1.5rem;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(0,0,0,.04);
+}
+.breadcrumb{font-size:.8rem;color:var(--text-muted)}
+.breadcrumb b{color:var(--text-dark)}
+.topbar-right{display:flex;align-items:center;gap:1rem}
+.last-updated{font-size:.75rem;color:var(--text-muted)}
+.btn-refresh{
+  display:flex;align-items:center;gap:.4rem;
+  background:linear-gradient(195deg,#49a3f1,#1A73E8);
+  color:white;border:none;border-radius:.5rem;
+  padding:.45rem .9rem;font-size:.78rem;font-weight:600;cursor:pointer;
+  transition:opacity .2s;
+}
+.btn-refresh:hover{opacity:.85}
+.btn-refresh svg{width:.9rem;height:.9rem}
+.btn-refresh.spinning svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.content{padding:1.5rem;flex:1}
+
+/* ── KPI GRID ─────────────────────────────────── */
+.kpi-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;
+  margin-bottom:1.5rem;padding-top:2rem;
+}
+.kpi-card{
+  background:white;border-radius:var(--radius);
+  box-shadow:var(--card-shadow);
+  padding:1rem 1.25rem 1.1rem;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  position:relative;
+}
+.kpi-icon{
+  width:3.5rem;height:3.5rem;border-radius:.75rem;
+  display:flex;align-items:center;justify-content:center;
+  margin-top:-1.75rem;flex-shrink:0;
+  box-shadow:0 4px 20px 0 rgba(0,0,0,.15),0 7px 10px -5px rgba(0,0,0,.35);
+}
+.kpi-icon svg{width:1.4rem;height:1.4rem;fill:none;stroke:white;stroke-width:2px;stroke-linecap:round;stroke-linejoin:round}
+.kpi-body{flex:1;padding-left:1rem;min-width:0}
+.kpi-label{font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem}
+.kpi-value{font-size:1.6rem;font-weight:700;color:var(--text-dark);line-height:1.1}
+.kpi-sub{font-size:.75rem;color:var(--text-muted);margin-top:.3rem}
+.kpi-sub b{font-weight:600}
+.kpi-sub .up{color:#82d616} .kpi-sub .dn{color:#ea0606} .kpi-sub .warn{color:#f53939}
+
+/* gradients */
+.g-dark{background:linear-gradient(195deg,#42424a,#191919)}
+.g-blue{background:linear-gradient(195deg,#49a3f1,#1A73E8)}
+.g-green{background:linear-gradient(195deg,#66BB6A,#43A047)}
+.g-orange{background:linear-gradient(195deg,#FFA726,#FB8C00)}
+.g-red{background:linear-gradient(195deg,#EF5350,#E53935)}
+.g-purple{background:linear-gradient(195deg,#AB47BC,#8E24AA)}
+
+/* ── CHARTS GRID ─────────────────────────────── */
+.charts-row{display:grid;gap:1.5rem;margin-bottom:1.5rem}
+.charts-row-2{grid-template-columns:3fr 2fr}
+.charts-row-3{grid-template-columns:1fr 1fr 1fr}
+.chart-card{background:white;border-radius:var(--radius);box-shadow:var(--card-shadow);padding:1.25rem 1.5rem;overflow:hidden}
+.chart-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.chart-card-title{font-size:.85rem;font-weight:700;color:var(--text-dark)}
+.chart-card-sub{font-size:.72rem;color:var(--text-muted);margin-top:.15rem}
+.chart-wrap{position:relative;height:220px}
+.chart-wrap canvas{max-height:220px}
+.chart-wrap-sm{position:relative;height:180px}
+.chart-wrap-sm canvas{max-height:180px}
+
+/* donut legend */
+.donut-legend{display:flex;flex-direction:column;gap:.5rem;margin-top:.75rem}
+.legend-item{display:flex;align-items:center;justify-content:space-between;font-size:.78rem}
+.legend-dot{width:.65rem;height:.65rem;border-radius:50%;flex-shrink:0;margin-right:.5rem}
+.legend-label{display:flex;align-items:center;color:var(--text-muted)}
+.legend-val{font-weight:700;color:var(--text-dark)}
+
+/* ── TABLE ───────────────────────────────────── */
+.table-card{background:white;border-radius:var(--radius);box-shadow:var(--card-shadow);overflow:hidden;margin-bottom:1.5rem}
+.table-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem}
+.table-title{font-size:.9rem;font-weight:700;color:var(--text-dark)}
+.table-title span{font-size:.75rem;font-weight:400;color:var(--text-muted);margin-left:.5rem}
+.table-filters{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.filter-input{
+  border:1px solid var(--border);border-radius:.5rem;
+  padding:.4rem .75rem;font-size:.78rem;font-family:var(--font);
+  color:var(--text-dark);outline:none;min-width:160px;
+}
+.filter-input:focus{border-color:#1A73E8;box-shadow:0 0 0 3px rgba(26,115,232,.1)}
+.filter-select{
+  border:1px solid var(--border);border-radius:.5rem;
+  padding:.4rem .75rem;font-size:.78rem;font-family:var(--font);
+  color:var(--text-dark);outline:none;background:white;cursor:pointer;
+}
+.filter-select:focus{border-color:#1A73E8}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+thead{background:#f8f9fa}
+th{padding:.75rem 1rem;text-align:left;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);white-space:nowrap;border-bottom:1px solid var(--border)}
+td{padding:.7rem 1rem;border-bottom:1px solid #f0f0f0;color:var(--text-dark);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbff}
+.table-footer{padding:.75rem 1.5rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:.75rem;color:var(--text-muted)}
+.pagination{display:flex;gap:.35rem;align-items:center}
+.page-btn{
+  width:2rem;height:2rem;border-radius:.4rem;border:1px solid var(--border);
+  background:white;font-size:.75rem;font-family:var(--font);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;color:var(--text-dark);transition:all .15s;
+}
+.page-btn:hover{background:#f0f4ff;border-color:#1A73E8}
+.page-btn.active{background:#1A73E8;color:white;border-color:#1A73E8}
+.page-btn:disabled{opacity:.35;cursor:default}
+
+/* ── BADGES ──────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;padding:.2rem .6rem;border-radius:.35rem;font-size:.7rem;font-weight:700;white-space:nowrap}
+.badge-green{background:#e8f5e9;color:#2e7d32}
+.badge-yellow{background:#fff8e1;color:#f57f17}
+.badge-red{background:#ffebee;color:#c62828}
+.badge-blue{background:#e3f2fd;color:#1565c0}
+.badge-gray{background:#f5f5f5;color:#616161}
+.badge-ok{background:#e8f5e9;color:#2e7d32}
+.badge-warn{background:#ffebee;color:#c62828}
+.badge-dot{width:.45rem;height:.45rem;border-radius:50%;margin-right:.35rem;display:inline-block}
+
+/* ── LOADING / ERROR ─────────────────────────── */
+.loading-screen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:60vh;gap:1rem;color:var(--text-muted);
+}
+.spinner{
+  width:2.5rem;height:2.5rem;border:3px solid var(--border);
+  border-top-color:#1A73E8;border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+.error-box{
+  background:#fff5f5;border:1px solid #fed7d7;border-radius:.75rem;
+  padding:1.5rem;text-align:center;max-width:400px;color:#c62828;
+}
+.error-box button{
+  margin-top:1rem;background:#1A73E8;color:white;border:none;
+  padding:.5rem 1.25rem;border-radius:.5rem;cursor:pointer;font-size:.82rem;
+}
+
+/* ── LIVE BADGE ───────────────────────────────── */
+.live-badge{
+  display:flex;align-items:center;gap:.35rem;
+  background:#e8f5e9;color:#2e7d32;
+  padding:.25rem .7rem;border-radius:2rem;
+  font-size:.7rem;font-weight:800;letter-spacing:.06em;
+}
+.live-dot{
+  width:.45rem;height:.45rem;border-radius:50%;background:#43A047;
+  animation:pulse 1.5s infinite;
+}
+
+/* ── TOAST ────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:1.5rem;right:1.5rem;
+  background:#344767;color:white;
+  padding:.65rem 1.25rem;border-radius:.6rem;
+  font-size:.8rem;font-weight:600;
+  display:flex;align-items:center;gap:.5rem;
+  box-shadow:0 8px 24px rgba(0,0,0,.2);
+  z-index:9999;animation:slideUp .3s ease;
+}
+.toast-dot{width:.5rem;height:.5rem;border-radius:50%;background:#82d616;flex-shrink:0}
+@keyframes slideUp{from{transform:translateY(.75rem);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ── RESPONSIVE ──────────────────────────────── */
+@media(max-width:1100px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-row-2{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .kpi-grid{grid-template-columns:1fr}
+  .charts-row-3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="root"><div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#7b809a">Đang tải dashboard…</div></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* ─── CONSTANTS ─────────────────────────────── */
+const FIELDS = [
+  'no','poNo','invoiceNo','containerNo','blNo','destinationPort','plant',
+  'docRecDate','eta','ata','cusDecDate','declarationStatus','customsLine',
+  'taxPayDate','completedCusInspection','customsClearanceDate',
+  'truckPlate','driverTelephone','pickupAtPort','deliverToPlant','customerComplaint'
+];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MO_MAP = Object.fromEntries(MONTHS.map((m,i) => [m,i]));
+const HEARTBEAT_MS = 5 * 1000; // poll getLastModified() every 5 s (lightweight)
+
+/* ─── UTILITIES ─────────────────────────────── */
+function parseDate(str) {
+  if (!str || !str.trim()) return null;
+  const m = str.trim().match(/^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2})\s+(\w{3})$/);
+  if (!m) return null;
+  const mo = MO_MAP[m[4]];
+  if (mo === undefined) return null;
+  return new Date(2026, mo, +m[3], +m[1], +m[2]);
+}
+
+function dateOnly(d) {
+  if (!d) return null;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function daysBetween(a, b) {
+  if (!a || !b) return null;
+  return Math.round((b - a) / 86400000);
+}
+
+function fmtPct(v) { return v == null ? '—' : v.toFixed(1) + '%'; }
+function fmtDays(v) { return v == null ? '—' : v.toFixed(1) + ' ngày'; }
+function mapRow(r) { return Object.fromEntries(FIELDS.map((f,i) => [f, r[i] || ''])); }
+
+/* ─── KPI CALCULATIONS ───────────────────────── */
+function calcKPIs(ships) {
+  const total       = ships.length;
+  const atPort      = ships.filter(s => s.ata && s.pickupAtPort === 'No').length;
+  const inTransit   = ships.filter(s => s.pickupAtPort === 'Yes' && s.deliverToPlant === 'No').length;
+  const delivered   = ships.filter(s => s.deliverToPlant === 'Yes').length;
+  const declarations= ships.filter(s => s.cusDecDate).length;
+  const cleared     = ships.filter(s => s.customsClearanceDate).length;
+  const green       = ships.filter(s => s.customsLine === 'Green').length;
+  const yellow      = ships.filter(s => s.customsLine === 'Yellow').length;
+  const red         = ships.filter(s => s.customsLine === 'Red').length;
+  const correct     = ships.filter(s => s.declarationStatus === 'Correct').length;
+  const incorrect   = ships.filter(s => s.declarationStatus === 'Incorrect').length;
+  const decAccuracy = declarations > 0 ? (correct / declarations * 100) : 0;
+  const complaints  = ships.filter(s => s.customerComplaint && s.customerComplaint !== 'No Complaint').length;
+
+  const withDates = ships.filter(s => s.eta && s.ata);
+  const onTime = withDates.filter(s => {
+    const e = dateOnly(parseDate(s.eta)), a = dateOnly(parseDate(s.ata));
+    return e && a && a <= e;
+  }).length;
+  const onTimeRate = withDates.length > 0 ? (onTime / withDates.length * 100) : 0;
+
+  // avg clearance time: ATA → customsClearanceDate
+  const clearanceTimes = ships
+    .filter(s => s.ata && s.customsClearanceDate)
+    .map(s => daysBetween(dateOnly(parseDate(s.ata)), dateOnly(parseDate(s.customsClearanceDate))))
+    .filter(v => v != null && v >= 0);
+  const avgClearanceDays = clearanceTimes.length > 0
+    ? clearanceTimes.reduce((a,b) => a+b, 0) / clearanceTimes.length
+    : null;
+
+  // avg tax time: Cus Dec Date → Tax Pay Date
+  const taxTimes = ships
+    .filter(s => s.cusDecDate && s.taxPayDate)
+    .map(s => daysBetween(dateOnly(parseDate(s.cusDecDate)), dateOnly(parseDate(s.taxPayDate))))
+    .filter(v => v != null && v >= 0);
+  const avgTaxDays = taxTimes.length > 0
+    ? taxTimes.reduce((a,b) => a+b, 0) / taxTimes.length
+    : null;
+
+  return {
+    total, atPort, inTransit, delivered, declarations, cleared,
+    green, yellow, red, correct, incorrect,
+    decAccuracy, onTimeRate, complaints,
+    avgClearanceDays, avgTaxDays,
+    onTime, withDates: withDates.length
+  };
+}
+
+/* ─── CHART DATA BUILDERS ───────────────────── */
+function monthlyAccuracy(ships) {
+  const m = {};
+  ships.filter(s => s.cusDecDate && s.declarationStatus).forEach(s => {
+    const d = parseDate(s.cusDecDate); if (!d) return;
+    const k = MONTHS[d.getMonth()];
+    if (!m[k]) m[k] = { c:0, t:0 };
+    m[k].t++; if (s.declarationStatus === 'Correct') m[k].c++;
+  });
+  return MONTHS.map(mo => ({ label: mo, rate: m[mo] ? +(m[mo].c/m[mo].t*100).toFixed(1) : null, n: m[mo]?.t||0 }));
+}
+
+function monthlyOnTime(ships) {
+  const m = {};
+  ships.filter(s => s.eta && s.ata).forEach(s => {
+    const d = parseDate(s.eta); if (!d) return;
+    const k = MONTHS[d.getMonth()];
+    if (!m[k]) m[k] = { ok:0, t:0 };
+    m[k].t++;
+    const e = dateOnly(d), a = dateOnly(parseDate(s.ata));
+    if (a && a <= e) m[k].ok++;
+  });
+  return MONTHS.map(mo => ({ label: mo, rate: m[mo] ? +(m[mo].ok/m[mo].t*100).toFixed(1) : null, n: m[mo]?.t||0 }));
+}
+
+function monthlyVolume(ships) {
+  const m = {};
+  ships.filter(s => s.eta).forEach(s => {
+    const d = parseDate(s.eta); if (!d) return;
+    const k = MONTHS[d.getMonth()];
+    m[k] = (m[k] || 0) + 1;
+  });
+  return MONTHS.map(mo => ({ label: mo, count: m[mo] || 0 }));
+}
+
+function byPort(ships) {
+  const m = {};
+  ships.forEach(s => { if (s.destinationPort) m[s.destinationPort] = (m[s.destinationPort]||0)+1; });
+  return Object.entries(m).sort((a,b) => b[1]-a[1]);
+}
+
+function byPlant(ships) {
+  const m = {};
+  ships.forEach(s => { if (s.plant) m[s.plant] = (m[s.plant]||0)+1; });
+  return Object.entries(m).sort((a,b) => b[1]-a[1]);
+}
+
+/* ─── CHART COMPONENT ───────────────────────── */
+function ChartEl({ config, height = 220 }) {
+  const canvasRef = useRef(null);
+  const chartRef  = useRef(null);
+  const keyRef    = useRef(null);
+  const newKey    = JSON.stringify(config);
+
+  useEffect(() => {
+    if (!canvasRef.current || !config) return;
+    if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; }
+    chartRef.current = new Chart(canvasRef.current.getContext('2d'), config);
+    keyRef.current = newKey;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newKey]);
+
+  useEffect(() => () => { if (chartRef.current) chartRef.current.destroy(); }, []);
+  return <canvas ref={canvasRef} style={{maxHeight: height + 'px'}} />;
+}
+
+/* ─── BADGE ─────────────────────────────────── */
+function Badge({ val }) {
+  if (!val) return null;
+  const v = val.trim();
+  const cls =
+    v === 'Green'  ? 'badge badge-green'  :
+    v === 'Yellow' ? 'badge badge-yellow' :
+    v === 'Red'    ? 'badge badge-red'    :
+    v === 'Correct'? 'badge badge-ok'     :
+    v === 'Incorrect' ? 'badge badge-warn':
+    v === 'Yes'    ? 'badge badge-blue'   :
+    v === 'No'     ? 'badge badge-gray'   :
+    v === 'No Complaint' ? 'badge badge-green' :
+    'badge badge-warn';
+  const dot =
+    v === 'Green'  ? '#2e7d32' :
+    v === 'Yellow' ? '#f57f17' :
+    v === 'Red'    ? '#c62828' : null;
+  return (
+    <span className={cls}>
+      {dot && <span className="badge-dot" style={{background:dot}} />}
+      {v}
+    </span>
+  );
+}
+
+/* ─── SVG ICONS ─────────────────────────────── */
+const IconBox      = () => <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>;
+const IconShip     = () => <svg viewBox="0 0 24 24"><path d="M3 17l1.5-7L12 5l7.5 5L21 17H3zm9-12v5M5.5 10v4M18.5 10v4"/></svg>;
+const IconTruck    = () => <svg viewBox="0 0 24 24"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8zM5.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm13 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>;
+const IconDoc      = () => <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 13h8M8 17h5"/></svg>;
+const IconCheck    = () => <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>;
+const IconWarn     = () => <svg viewBox="0 0 24 24"><path d="M12 2L2 19h20L12 2zm0 7v5m0 3v1"/></svg>;
+const IconRefresh  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>;
+const IconDash     = () => <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
+const IconTime     = () => <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>;
+
+/* ─── KPI CARD ───────────────────────────────── */
+function KpiCard({ label, value, sub, gradient, icon: Icon }) {
+  return (
+    <div className="kpi-card">
+      <div className={`kpi-icon ${gradient}`}><Icon /></div>
+      <div className="kpi-body">
+        <div className="kpi-label">{label}</div>
+        <div className="kpi-value">{value}</div>
+        {sub && <div className="kpi-sub" dangerouslySetInnerHTML={{__html: sub}} />}
+      </div>
+    </div>
+  );
+}
+
+/* ─── SIDEBAR ───────────────────────────────── */
+function Sidebar({ lastUpdated, refreshing, liveOk }) {
+  return (
+    <aside className="sidebar">
+      <div className="sidebar-logo">
+        <div className="sidebar-logo-box"><IconShip /></div>
+        <div className="sidebar-brand">DP World<span>T&amp;C Dashboard</span></div>
+      </div>
+      <div className="nav-section-label">Menu</div>
+      <div className="nav-link active"><IconDash /><span>Dashboard</span></div>
+      <div className="nav-link"><IconDoc /><span>Tờ Khai</span></div>
+      <div className="nav-link"><IconTruck /><span>Vận Chuyển</span></div>
+      <div className="sidebar-footer">
+        <div className="refresh-status">
+          <div className="pulse" style={{background: refreshing ? '#FFA726' : liveOk ? '#82d616' : '#7b809a'}} />
+          <span>
+            {refreshing
+              ? 'Đang cập nhật…'
+              : liveOk
+                ? lastUpdated
+                  ? 'Live · ' + new Date(lastUpdated).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})
+                  : 'Đang kết nối…'
+                : 'Chờ trigger…'}
+          </span>
+        </div>
+        <div style={{fontSize:'.65rem',color:'rgba(255,255,255,.25)',padding:'0 1rem .25rem',lineHeight:1.4}}>
+          Kiểm tra mỗi 5 giây
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+/* ─── CHARTS ─────────────────────────────────── */
+const CHART_DEFAULTS = {
+  plugins:{ legend:{ display:false }, tooltip:{ mode:'index', intersect:false } },
+  scales:{
+    x:{ grid:{ display:false }, ticks:{ font:{ size:11, family:"'Plus Jakarta Sans', sans-serif" }, color:'#7b809a' } },
+    y:{ grid:{ color:'#f0f0f0' }, ticks:{ font:{ size:11, family:"'Plus Jakarta Sans', sans-serif" }, color:'#7b809a' } }
+  },
+  responsive:true,
+  maintainAspectRatio:false
+};
+
+function LineChartAccuracy({ data }) {
+  const filtered = data.filter(d => d.n > 0);
+  if (!filtered.length) return <div style={{height:220,display:'flex',alignItems:'center',justifyContent:'center',color:'#7b809a',fontSize:'.82rem'}}>Không đủ dữ liệu</div>;
+  const cfg = {
+    type:'line',
+    data:{
+      labels: data.map(d => d.label),
+      datasets:[{
+        label:'Tỉ lệ chính xác (%)',
+        data: data.map(d => d.rate),
+        borderColor:'#1A73E8',
+        backgroundColor:'rgba(26,115,232,.12)',
+        borderWidth:2.5,
+        pointRadius:4,
+        pointBackgroundColor:'#1A73E8',
+        fill:true,
+        tension:.4,
+        spanGaps:false
+      }]
+    },
+    options:{
+      ...CHART_DEFAULTS,
+      plugins:{
+        ...CHART_DEFAULTS.plugins,
+        legend:{ display:false },
+        tooltip:{
+          callbacks:{ label: ctx => ` ${ctx.parsed.y?.toFixed(1)}%` }
+        }
+      },
+      scales:{
+        ...CHART_DEFAULTS.scales,
+        y:{ ...CHART_DEFAULTS.scales.y, min:0, max:100, ticks:{ ...CHART_DEFAULTS.scales.y.ticks, callback:v=>`${v}%` } }
+      }
+    }
+  };
+  return <ChartEl config={cfg} height={220} />;
+}
+
+function LineChartOnTime({ data }) {
+  const cfg = {
+    type:'line',
+    data:{
+      labels: data.map(d => d.label),
+      datasets:[{
+        label:'Tỉ lệ đúng hạn (%)',
+        data: data.map(d => d.rate),
+        borderColor:'#43A047',
+        backgroundColor:'rgba(67,160,71,.12)',
+        borderWidth:2.5,
+        pointRadius:4,
+        pointBackgroundColor:'#43A047',
+        fill:true,
+        tension:.4,
+        spanGaps:false
+      }]
+    },
+    options:{
+      ...CHART_DEFAULTS,
+      plugins:{
+        ...CHART_DEFAULTS.plugins,
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label: ctx => ` ${ctx.parsed.y?.toFixed(1)}%` } }
+      },
+      scales:{
+        ...CHART_DEFAULTS.scales,
+        y:{ ...CHART_DEFAULTS.scales.y, min:0, max:100, ticks:{ ...CHART_DEFAULTS.scales.y.ticks, callback:v=>`${v}%` } }
+      }
+    }
+  };
+  return <ChartEl config={cfg} height={220} />;
+}
+
+function DonutChannels({ g, y, r }) {
+  const total = g + y + r;
+  const cfg = {
+    type:'doughnut',
+    data:{
+      labels:['Luồng Xanh','Luồng Vàng','Luồng Đỏ'],
+      datasets:[{
+        data:[g,y,r],
+        backgroundColor:['#43A047','#FFA726','#E53935'],
+        borderWidth:0,
+        hoverOffset:4
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      cutout:'72%',
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label: ctx => ` ${ctx.label}: ${ctx.parsed} (${total?((ctx.parsed/total)*100).toFixed(1):0}%)` } }
+      }
+    }
+  };
+  return (
+    <div>
+      <div style={{height:180,position:'relative'}}><ChartEl config={cfg} height={180} /></div>
+      <div className="donut-legend">
+        {[['Luồng Xanh','#43A047',g],['Luồng Vàng','#FFA726',y],['Luồng Đỏ','#E53935',r]].map(([lb,col,n])=>(
+          <div className="legend-item" key={lb}>
+            <div className="legend-label"><span className="legend-dot" style={{background:col}}/>{lb}</div>
+            <div><span className="legend-val">{n}</span><span style={{color:'var(--text-muted)',marginLeft:'.3rem',fontSize:'.72rem'}}>({total?((n/total)*100).toFixed(1):0}%)</span></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BarPort({ data }) {
+  const cfg = {
+    type:'bar',
+    data:{
+      labels: data.map(([p]) => p.replace(' Port','')),
+      datasets:[{
+        label:'Containers',
+        data: data.map(([,n]) => n),
+        backgroundColor:'rgba(26,115,232,.75)',
+        borderRadius:6,
+        borderSkipped:false
+      }]
+    },
+    options:{
+      ...CHART_DEFAULTS,
+      indexAxis:'y',
+      plugins:{ ...CHART_DEFAULTS.plugins, tooltip:{ callbacks:{ label: ctx => ` ${ctx.parsed.x} containers` } } },
+      scales:{
+        x:{ ...CHART_DEFAULTS.scales.x, grid:{ color:'#f0f0f0' }, ticks:{ ...CHART_DEFAULTS.scales.x.ticks } },
+        y:{ grid:{ display:false }, ticks:{ font:{ size:11, family:"'Plus Jakarta Sans', sans-serif" }, color:'#344767' } }
+      }
+    }
+  };
+  return <ChartEl config={cfg} height={180} />;
+}
+
+function BarVolume({ data }) {
+  const active = data.filter(d => d.count > 0);
+  const cfg = {
+    type:'bar',
+    data:{
+      labels: data.map(d => d.label),
+      datasets:[{
+        label:'Containers',
+        data: data.map(d => d.count),
+        backgroundColor: data.map(d =>
+          d.count === Math.max(...data.map(x=>x.count)) ? 'rgba(26,115,232,.85)' : 'rgba(26,115,232,.35)'
+        ),
+        borderRadius:6,
+        borderSkipped:false
+      }]
+    },
+    options:{
+      ...CHART_DEFAULTS,
+      plugins:{ ...CHART_DEFAULTS.plugins, tooltip:{ callbacks:{ label: ctx => ` ${ctx.parsed.y} containers` } } }
+    }
+  };
+  return <ChartEl config={cfg} height={180} />;
+}
+
+/* ─── TABLE ─────────────────────────────────── */
+const PAGE_SIZE = 20;
+
+function ShipmentsTable({ ships }) {
+  const [search, setSearch] = useState('');
+  const [portF,  setPortF]  = useState('');
+  const [lineF,  setLineF]  = useState('');
+  const [decF,   setDecF]   = useState('');
+  const [page,   setPage]   = useState(1);
+
+  const ports = [...new Set(ships.map(s => s.destinationPort))].filter(Boolean).sort();
+  const lines = ['Green','Yellow','Red'];
+
+  const filtered = ships.filter(s => {
+    const q = search.toLowerCase();
+    if (q && ![s.poNo,s.containerNo,s.blNo,s.invoiceNo,s.plant].some(v=>v.toLowerCase().includes(q))) return false;
+    if (portF && s.destinationPort !== portF) return false;
+    if (lineF && s.customsLine !== lineF) return false;
+    if (decF  && s.declarationStatus !== decF) return false;
+    return true;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pg = Math.min(page, totalPages);
+  const rows = filtered.slice((pg-1)*PAGE_SIZE, pg*PAGE_SIZE);
+
+  const changePage = p => setPage(Math.max(1, Math.min(totalPages, p)));
+
+  useEffect(() => setPage(1), [search, portF, lineF, decF]);
+
+  return (
+    <div className="table-card">
+      <div className="table-header">
+        <div>
+          <div className="table-title">Danh Sách Lô Hàng <span>({filtered.length} / {ships.length})</span></div>
+        </div>
+        <div className="table-filters">
+          <input
+            className="filter-input" placeholder="🔍  Tìm PO / Container / BL…"
+            value={search} onChange={e => setSearch(e.target.value)}
+          />
+          <select className="filter-select" value={portF} onChange={e => setPortF(e.target.value)}>
+            <option value="">Tất cả cảng</option>
+            {ports.map(p => <option key={p}>{p}</option>)}
+          </select>
+          <select className="filter-select" value={lineF} onChange={e => setLineF(e.target.value)}>
+            <option value="">Tất cả luồng</option>
+            {lines.map(l => <option key={l}>{l}</option>)}
+          </select>
+          <select className="filter-select" value={decF} onChange={e => setDecF(e.target.value)}>
+            <option value="">Tất cả tờ khai</option>
+            <option>Correct</option>
+            <option>Incorrect</option>
+          </select>
+        </div>
+      </div>
+      <div className="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>PO No</th>
+              <th>Container No</th>
+              <th>BL No</th>
+              <th>Cảng Đến</th>
+              <th>Nhà Máy</th>
+              <th>ETA</th>
+              <th>ATA</th>
+              <th>Tờ Khai</th>
+              <th>Luồng</th>
+              <th>Thông Quan</th>
+              <th>Lấy Cont</th>
+              <th>Giao NM</th>
+              <th>Phản Ánh</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0
+              ? <tr><td colSpan={14} style={{textAlign:'center',color:'var(--text-muted)',padding:'2rem'}}>Không có dữ liệu phù hợp</td></tr>
+              : rows.map(s => {
+                const eta = parseDate(s.eta), ata = parseDate(s.ata);
+                const late = eta && ata && dateOnly(ata) > dateOnly(eta);
+                return (
+                  <tr key={s.no}>
+                    <td style={{color:'var(--text-muted)'}}>{s.no}</td>
+                    <td style={{fontWeight:600}}>{s.poNo}</td>
+                    <td style={{fontFamily:'monospace',fontSize:'.76rem'}}>{s.containerNo}</td>
+                    <td style={{fontFamily:'monospace',fontSize:'.76rem'}}>{s.blNo}</td>
+                    <td>{s.destinationPort.replace(' Port','')}</td>
+                    <td>{s.plant.replace(' Plant','')}</td>
+                    <td>{s.eta}</td>
+                    <td style={{color: late ? '#c62828' : 'inherit', fontWeight: late ? 600 : 400}}>{s.ata}</td>
+                    <td><Badge val={s.declarationStatus} /></td>
+                    <td><Badge val={s.customsLine} /></td>
+                    <td style={{fontSize:'.72rem'}}>{s.customsClearanceDate}</td>
+                    <td><Badge val={s.pickupAtPort} /></td>
+                    <td><Badge val={s.deliverToPlant} /></td>
+                    <td>
+                      {s.customerComplaint && s.customerComplaint !== 'No Complaint'
+                        ? <span className="badge badge-warn">{s.customerComplaint}</span>
+                        : <span style={{color:'var(--text-muted)',fontSize:'.72rem'}}>—</span>}
+                    </td>
+                  </tr>
+                );
+              })
+            }
+          </tbody>
+        </table>
+      </div>
+      <div className="table-footer">
+        <span>Trang {pg} / {totalPages} ({filtered.length} bản ghi)</span>
+        <div className="pagination">
+          <button className="page-btn" onClick={() => changePage(1)} disabled={pg===1}>«</button>
+          <button className="page-btn" onClick={() => changePage(pg-1)} disabled={pg===1}>‹</button>
+          {Array.from({length:Math.min(5, totalPages)}, (_,i) => {
+            const start = Math.max(1, Math.min(pg-2, totalPages-4));
+            const p = start + i;
+            return p <= totalPages
+              ? <button key={p} className={`page-btn ${p===pg?'active':''}`} onClick={() => changePage(p)}>{p}</button>
+              : null;
+          })}
+          <button className="page-btn" onClick={() => changePage(pg+1)} disabled={pg===totalPages}>›</button>
+          <button className="page-btn" onClick={() => changePage(totalPages)} disabled={pg===totalPages}>»</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── TOAST ─────────────────────────────────── */
+function Toast({ message, onDismiss }) {
+  useEffect(() => {
+    const t = setTimeout(onDismiss, 3500);
+    return () => clearTimeout(t);
+  }, [onDismiss]);
+  return (
+    <div className="toast" onClick={onDismiss} style={{cursor:'pointer'}}>
+      <span className="toast-dot" />
+      {message}
+    </div>
+  );
+}
+
+/* ─── MAIN APP ───────────────────────────────── */
+function App() {
+  const [ships,       setShips]      = useState([]);
+  const [lastUpdated, setLastUpdated]= useState(null);
+  const [loading,     setLoading]    = useState(true);
+  const [refreshing,  setRefreshing] = useState(false);
+  const [error,       setError]      = useState(null);
+  const [toast,       setToast]      = useState(null);
+  const [liveOk,      setLiveOk]     = useState(false);
+
+  // Ref holds current data version — avoids stale closure in heartbeat interval
+  const dataVersionRef = useRef(null);
+  const toastDismiss   = useCallback(() => setToast(null), []);
+
+  // ── Full data fetch ─────────────────────────
+  const loadData = useCallback((silent = false) => {
+    if (!silent) setRefreshing(true);
+    setError(null);
+
+    const onSuccess = ({ data, lastUpdated: lu, error: err }) => {
+      if (err) {
+        setError(err);
+        setRefreshing(false);
+        setLoading(false);
+        return;
+      }
+      setShips((data || []).map(mapRow));
+      setLastUpdated(lu);
+      dataVersionRef.current = lu;
+      setLoading(false);
+      setRefreshing(false);
+      if (silent) setToast('Dữ liệu vừa được cập nhật tự động!');
+    };
+
+    const onFail = msg => {
+      if (!silent) setError(String(msg));
+      setLoading(false);
+      setRefreshing(false);
+    };
+
+    if (typeof google !== 'undefined' && google.script) {
+      google.script.run
+        .withSuccessHandler(onSuccess)
+        .withFailureHandler(onFail)
+        .getShipmentData();
+    } else {
+      setError('Chạy ngoài Google Apps Script — không có dữ liệu thực.');
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  // ── Initial load ────────────────────────────
+  useEffect(() => { loadData(false); }, [loadData]);
+
+  // ── Heartbeat: poll getLastModified() every 5 s ─
+  // Lightweight: only reads ScriptProperties, never touches Sheet
+  // Only triggers full reload when timestamp actually changes
+  useEffect(() => {
+    const tick = () => {
+      if (typeof google === 'undefined' || !google.script) return;
+      google.script.run
+        .withSuccessHandler(ts => {
+          setLiveOk(true);
+          if (ts && dataVersionRef.current && ts !== dataVersionRef.current) {
+            dataVersionRef.current = ts; // guard against duplicate triggers
+            loadData(true);             // silent background refresh
+          }
+        })
+        .withFailureHandler(() => setLiveOk(false))
+        .getLastModified();
+    };
+    const t = setInterval(tick, HEARTBEAT_MS);
+    return () => clearInterval(t);
+  }, [loadData]);
+
+  // ── Loading screen ──────────────────────────
+  if (loading) return (
+    <div className="loading-screen" style={{position:'fixed',inset:0,background:'var(--bg)',zIndex:999,flexDirection:'column'}}>
+      <div className="spinner" />
+      <div style={{fontSize:'.85rem',color:'var(--text-muted)'}}>Đang kết nối Google Sheets…</div>
+    </div>
+  );
+
+  // ── Error screen ────────────────────────────
+  if (error && !ships.length) return (
+    <>
+      <Sidebar lastUpdated={lastUpdated} liveOk={false} refreshing={false} />
+      <div className="main">
+        <div className="content" style={{display:'flex',alignItems:'center',justifyContent:'center',flex:1}}>
+          <div className="error-box">
+            <div style={{fontWeight:700,marginBottom:'.5rem'}}>Lỗi tải dữ liệu</div>
+            <div style={{fontSize:'.82rem'}}>{error}</div>
+            <button onClick={() => loadData(false)}>Thử lại</button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  const kpi    = calcKPIs(ships);
+  const accMo  = monthlyAccuracy(ships);
+  const otMo   = monthlyOnTime(ships);
+  const volMo  = monthlyVolume(ships);
+  const portD  = byPort(ships);
+  const plantD = byPlant(ships);
+
+  return (
+    <>
+      <Sidebar lastUpdated={lastUpdated} liveOk={liveOk} refreshing={refreshing} />
+      {toast && <Toast message={toast} onDismiss={toastDismiss} />}
+
+      <div className="main">
+        {/* TOPBAR */}
+        <div className="topbar">
+          <div className="breadcrumb">
+            <span style={{color:'var(--text-muted)'}}>Trang chủ / </span>
+            <b>Dashboard Tổng Quan</b>
+          </div>
+          <div className="topbar-right">
+            {liveOk && <div className="live-badge"><span className="live-dot" />LIVE</div>}
+            {lastUpdated && (
+              <span className="last-updated">
+                Cập nhật {new Date(lastUpdated).toLocaleTimeString('vi-VN')}
+              </span>
+            )}
+            <button
+              className={`btn-refresh ${refreshing ? 'spinning' : ''}`}
+              onClick={() => loadData(false)}
+              disabled={refreshing}
+            >
+              <IconRefresh />
+              {refreshing ? 'Đang tải…' : 'Làm mới'}
+            </button>
+          </div>
+        </div>
+
+        <div className="content">
+
+          {/* ── KPI CARDS ─────────────────────────── */}
+          <div className="kpi-grid">
+            <KpiCard label="Tổng Container" value={kpi.total}
+              sub={`<span class="up">↑ ${kpi.cleared} đã thông quan</span>`}
+              gradient="g-dark" icon={IconBox} />
+            <KpiCard label="Container Tại Cảng" value={kpi.atPort}
+              sub={`Chưa lấy cont · <b>${kpi.inTransit}</b> đang vận chuyển`}
+              gradient="g-orange" icon={IconShip} />
+            <KpiCard label="Container Đã Giao NM" value={kpi.delivered}
+              sub={`<span class="up">${kpi.total?(kpi.delivered/kpi.total*100).toFixed(1):0}%</span> tổng lô hàng`}
+              gradient="g-green" icon={IconTruck} />
+            <KpiCard label="Số Lượng Tờ Khai" value={kpi.declarations}
+              sub={`<span class="up">${kpi.correct} chính xác</span> · <span class="dn">${kpi.incorrect} sai</span>`}
+              gradient="g-blue" icon={IconDoc} />
+            <KpiCard label="Tỉ Lệ Chính Xác TK" value={fmtPct(kpi.decAccuracy)}
+              sub={`Luồng đỏ: <b class="dn">${kpi.red}</b> · Vàng: <b class="warn">${kpi.yellow}</b> · Xanh: <b class="up">${kpi.green}</b>`}
+              gradient="g-purple" icon={IconCheck} />
+            <KpiCard label="Tỉ Lệ Giao Đúng Hạn" value={fmtPct(kpi.onTimeRate)}
+              sub={`${kpi.onTime}/${kpi.withDates} lô · Phản ánh: <span class="dn">${kpi.complaints}</span>`}
+              gradient={kpi.onTimeRate >= 80 ? 'g-green' : 'g-red'} icon={IconTime} />
+          </div>
+
+          {/* ── CHARTS ROW 1 ─────────────────────── */}
+          <div className="charts-row charts-row-2">
+            <div className="chart-card">
+              <div className="chart-card-header">
+                <div>
+                  <div className="chart-card-title">Tỉ Lệ Chính Xác Tờ Khai Theo Tháng</div>
+                  <div className="chart-card-sub">Dựa trên ngày khai báo · {fmtPct(kpi.decAccuracy)} toàn bộ</div>
+                </div>
+              </div>
+              <div className="chart-wrap"><LineChartAccuracy data={accMo} /></div>
+            </div>
+            <div className="chart-card">
+              <div className="chart-card-header">
+                <div>
+                  <div className="chart-card-title">Tỷ Lệ Luồng Tờ Khai</div>
+                  <div className="chart-card-sub">Phân bổ luồng hải quan</div>
+                </div>
+              </div>
+              <DonutChannels g={kpi.green} y={kpi.yellow} r={kpi.red} />
+            </div>
+          </div>
+
+          {/* ── CHARTS ROW 2 ─────────────────────── */}
+          <div className="charts-row charts-row-2">
+            <div className="chart-card">
+              <div className="chart-card-header">
+                <div>
+                  <div className="chart-card-title">Tỉ Lệ Giao Hàng Đúng Hạn Theo Tháng</div>
+                  <div className="chart-card-sub">ATA ≤ ETA · {fmtPct(kpi.onTimeRate)} toàn bộ</div>
+                </div>
+              </div>
+              <div className="chart-wrap"><LineChartOnTime data={otMo} /></div>
+            </div>
+            <div className="chart-card">
+              <div className="chart-card-header">
+                <div>
+                  <div className="chart-card-title">Container Theo Cảng</div>
+                  <div className="chart-card-sub">Số lượng theo cảng đến</div>
+                </div>
+              </div>
+              <div className="chart-wrap-sm"><BarPort data={portD} /></div>
+            </div>
+          </div>
+
+          {/* ── CHARTS ROW 3 ─────────────────────── */}
+          <div className="charts-row charts-row-2">
+            <div className="chart-card">
+              <div className="chart-card-header">
+                <div>
+                  <div className="chart-card-title">Khối Lượng Container Theo Tháng</div>
+                  <div className="chart-card-sub">Dựa trên ETA</div>
+                </div>
+              </div>
+              <div className="chart-wrap"><BarVolume data={volMo} /></div>
+            </div>
+            <div className="chart-card">
+              <div className="chart-card-header">
+                <div>
+                  <div className="chart-card-title">Container Theo Nhà Máy</div>
+                  <div className="chart-card-sub">Phân bổ điểm đến</div>
+                </div>
+              </div>
+              <div className="chart-wrap-sm">
+                <BarPort data={plantD.map(([k,v]) => [k.replace(' Plant',''), v])} />
+              </div>
+            </div>
+          </div>
+
+          {/* ── TABLE ────────────────────────────── */}
+          <ShipmentsTable ships={ships} />
+
+        </div>
+      </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

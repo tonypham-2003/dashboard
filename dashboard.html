@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T&amp;C Dashboard — DP World</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ── RESET & BASE ────────────────────────── */
+:root{
+  --sw:260px;--bg:#f8f9fa;--shadow:0 20px 27px 0 rgba(0,0,0,.05);
+  --r:1rem;--font:'Plus Jakarta Sans',-apple-system,sans-serif;
+  --dark:#344767;--muted:#7b809a;--border:#e9ecef;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--dark);display:flex;min-height:100vh}
+
+/* ── SIDEBAR ─────────────────────────────── */
+.sidebar{
+  width:var(--sw);min-height:100vh;position:fixed;top:0;left:0;z-index:200;
+  background:linear-gradient(195deg,#42424a,#191919);
+  display:flex;flex-direction:column;padding:1.5rem 1rem;
+  box-shadow:0 4px 6px -1px rgba(0,0,0,.3);
+}
+.sb-logo{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:1.5rem}
+.sb-icon{width:2.25rem;height:2.25rem;border-radius:.6rem;background:linear-gradient(195deg,#49a3f1,#1A73E8);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-icon svg{width:1.2rem;height:1.2rem;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sb-brand{color:white;font-size:.9rem;font-weight:700;line-height:1.2}
+.sb-brand small{display:block;font-size:.7rem;font-weight:400;opacity:.7}
+.nav-sec{color:rgba(255,255,255,.4);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.5rem 1rem .3rem}
+.nav-link{display:flex;align-items:center;gap:.75rem;padding:.6rem 1rem;border-radius:.6rem;color:rgba(255,255,255,.7);font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:.15rem;user-select:none}
+.nav-link:hover{background:rgba(255,255,255,.1);color:white}
+.nav-link.active{background:white;color:#344767;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.nav-link svg{width:1rem;height:1rem;flex-shrink:0;stroke:rgba(255,255,255,.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav-link.active svg{stroke:#344767}
+.sb-foot{margin-top:auto;padding-top:1rem;border-top:1px solid rgba(255,255,255,.1)}
+.sb-status{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;font-size:.72rem;color:rgba(255,255,255,.5)}
+.dot{width:.5rem;height:.5rem;border-radius:50%;flex-shrink:0;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.2)}}
+
+/* ── MAIN ────────────────────────────────── */
+.main{margin-left:var(--sw);flex:1;min-height:100vh;display:flex;flex-direction:column}
+
+/* ── TOPBAR ──────────────────────────────── */
+.topbar{
+  background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
+  padding:.9rem 1.5rem;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(0,0,0,.04);
+}
+.breadcrumb{font-size:.8rem;color:var(--muted)}
+.breadcrumb b{color:var(--dark)}
+.topbar-r{display:flex;align-items:center;gap:.75rem}
+.last-upd{font-size:.74rem;color:var(--muted)}
+.live-badge{display:flex;align-items:center;gap:.35rem;background:#e8f5e9;color:#2e7d32;padding:.25rem .7rem;border-radius:2rem;font-size:.7rem;font-weight:800;letter-spacing:.06em}
+.live-dot{width:.45rem;height:.45rem;border-radius:50%;background:#43A047;animation:pulse 1.5s infinite}
+.btn-refresh{
+  display:flex;align-items:center;gap:.4rem;
+  background:linear-gradient(195deg,#49a3f1,#1A73E8);color:white;
+  border:none;border-radius:.5rem;padding:.45rem .9rem;font-size:.78rem;font-weight:600;cursor:pointer;transition:opacity .2s;
+}
+.btn-refresh:hover{opacity:.85}
+.btn-refresh:disabled{opacity:.6;cursor:default}
+.btn-refresh svg{width:.9rem;height:.9rem;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round}
+.btn-refresh.spin svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── CONTENT ─────────────────────────────── */
+.content{padding:1.5rem;flex:1}
+
+/* ── KPI GRID ────────────────────────────── */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-bottom:1.5rem;padding-top:2rem}
+.kpi-card{background:white;border-radius:var(--r);box-shadow:var(--shadow);padding:1rem 1.25rem 1.1rem;display:flex;align-items:flex-start;justify-content:space-between;position:relative}
+.kpi-ico{width:3.5rem;height:3.5rem;border-radius:.75rem;display:flex;align-items:center;justify-content:center;margin-top:-1.75rem;flex-shrink:0;box-shadow:0 4px 20px rgba(0,0,0,.15),0 7px 10px -5px rgba(0,0,0,.35)}
+.kpi-ico svg{width:1.4rem;height:1.4rem;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.kpi-body{flex:1;padding-left:1rem;min-width:0}
+.kpi-lbl{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem}
+.kpi-val{font-size:1.6rem;font-weight:700;color:var(--dark);line-height:1.1}
+.kpi-sub{font-size:.75rem;color:var(--muted);margin-top:.3rem}
+.kpi-sub .up{color:#82d616}.kpi-sub .dn{color:#ea0606}.kpi-sub .wa{color:#f57f17}
+.g-dark{background:linear-gradient(195deg,#42424a,#191919)}
+.g-blue{background:linear-gradient(195deg,#49a3f1,#1A73E8)}
+.g-green{background:linear-gradient(195deg,#66BB6A,#43A047)}
+.g-orange{background:linear-gradient(195deg,#FFA726,#FB8C00)}
+.g-red{background:linear-gradient(195deg,#EF5350,#E53935)}
+.g-purple{background:linear-gradient(195deg,#AB47BC,#8E24AA)}
+
+/* ── CHARTS ──────────────────────────────── */
+.charts-row{display:grid;gap:1.5rem;margin-bottom:1.5rem}
+.cr2{grid-template-columns:3fr 2fr}
+.chart-card{background:white;border-radius:var(--r);box-shadow:var(--shadow);padding:1.25rem 1.5rem;overflow:hidden}
+.cc-hdr{margin-bottom:1rem}
+.cc-title{font-size:.85rem;font-weight:700;color:var(--dark)}
+.cc-sub{font-size:.72rem;color:var(--muted);margin-top:.15rem}
+.cw{position:relative;height:220px}.cw canvas{max-height:220px}
+.cw-sm{position:relative;height:180px}.cw-sm canvas{max-height:180px}
+.donut-legend{display:flex;flex-direction:column;gap:.5rem;margin-top:.75rem}
+.dl-item{display:flex;align-items:center;justify-content:space-between;font-size:.78rem}
+.dl-dot{width:.65rem;height:.65rem;border-radius:50%;flex-shrink:0;margin-right:.5rem}
+.dl-lbl{display:flex;align-items:center;color:var(--muted)}
+.dl-val{font-weight:700;color:var(--dark)}
+
+/* ── TABLE ───────────────────────────────── */
+.tbl-card{background:white;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:1.5rem}
+.tbl-hdr{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem}
+.tbl-title{font-size:.9rem;font-weight:700;color:var(--dark)}
+.tbl-title span{font-size:.75rem;font-weight:400;color:var(--muted);margin-left:.5rem}
+.filters{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.finput{border:1px solid var(--border);border-radius:.5rem;padding:.4rem .75rem;font-size:.78rem;font-family:var(--font);color:var(--dark);outline:none;min-width:160px}
+.finput:focus{border-color:#1A73E8;box-shadow:0 0 0 3px rgba(26,115,232,.1)}
+.fsel{border:1px solid var(--border);border-radius:.5rem;padding:.4rem .75rem;font-size:.78rem;font-family:var(--font);color:var(--dark);outline:none;background:white;cursor:pointer}
+.fsel:focus{border-color:#1A73E8}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+thead{background:#f8f9fa}
+th{padding:.75rem 1rem;text-align:left;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);white-space:nowrap;border-bottom:1px solid var(--border)}
+td{padding:.7rem 1rem;border-bottom:1px solid #f0f0f0;color:var(--dark);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbff}
+.tbl-foot{padding:.75rem 1.5rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:.75rem;color:var(--muted)}
+.pager{display:flex;gap:.35rem;align-items:center}
+.pbtn{width:2rem;height:2rem;border-radius:.4rem;border:1px solid var(--border);background:white;font-size:.75rem;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--dark);transition:all .15s}
+.pbtn:hover{background:#f0f4ff;border-color:#1A73E8}
+.pbtn.on{background:#1A73E8;color:white;border-color:#1A73E8}
+.pbtn:disabled{opacity:.35;cursor:default}
+
+/* ── BADGES ──────────────────────────────── */
+.badge{display:inline-flex;align-items:center;padding:.2rem .6rem;border-radius:.35rem;font-size:.7rem;font-weight:700;white-space:nowrap}
+.bg-green{background:#e8f5e9;color:#2e7d32}
+.bg-yellow{background:#fff8e1;color:#f57f17}
+.bg-red{background:#ffebee;color:#c62828}
+.bg-blue{background:#e3f2fd;color:#1565c0}
+.bg-gray{background:#f5f5f5;color:#616161}
+.bg-warn{background:#ffebee;color:#c62828}
+.bdot{width:.45rem;height:.45rem;border-radius:50%;margin-right:.35rem;display:inline-block}
+
+/* ── LOADING / ERROR / TOAST ─────────────── */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:1rem;color:var(--muted);position:fixed;inset:0;background:var(--bg);z-index:999}
+.spinner{width:2.5rem;height:2.5rem;border:3px solid var(--border);border-top-color:#1A73E8;border-radius:50%;animation:spin .7s linear infinite}
+.err-box{background:#fff5f5;border:1px solid #fed7d7;border-radius:.75rem;padding:1.5rem;text-align:center;max-width:440px;color:#c62828}
+.err-box b{display:block;margin-bottom:.5rem;font-size:.95rem}
+.err-box code{display:block;font-size:.75rem;margin:.5rem 0;word-break:break-all;background:#fee;padding:.5rem;border-radius:.4rem}
+.err-box button{margin-top:1rem;background:#1A73E8;color:white;border:none;padding:.5rem 1.25rem;border-radius:.5rem;cursor:pointer;font-size:.82rem;font-family:var(--font)}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#344767;color:white;padding:.65rem 1.25rem;border-radius:.6rem;font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:.5rem;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:9999;animation:slideUp .3s ease;cursor:pointer}
+.toast-dot{width:.5rem;height:.5rem;border-radius:50%;background:#82d616;flex-shrink:0}
+@keyframes slideUp{from{transform:translateY(.75rem);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ── RESPONSIVE ──────────────────────────── */
+@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.cr2{grid-template-columns:1fr}}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0}.kpi-grid{grid-template-columns:1fr}}
+
+/* ── NOTICE BANNER ───────────────────────── */
+.notice{background:#fff3cd;border:1px solid #ffc107;border-radius:.75rem;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:.82rem;color:#856404;display:flex;align-items:flex-start;gap:.75rem}
+.notice svg{width:1.1rem;height:1.1rem;flex-shrink:0;margin-top:.1rem;stroke:#856404;fill:none;stroke-width:2;stroke-linecap:round}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* ─── CONFIG ─────────────────────────────── */
+// ⚠ Thay bằng thông tin Supabase project của bạn
+const SUPABASE_URL = 'https://shuiloynbgpazmipcxkz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNodWlsb3luYmdwYXptaXB4Y2t6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3OTMwOTYsImV4cCI6MjA5NjM2OTA5Nn0.EUpS76OoUWAdnbuPOwW1v1I8CPINvlorqzpuaX_4AlY';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const FIELDS = [
+  'no','poNo','invoiceNo','containerNo','blNo','destinationPort','plant',
+  'docRecDate','eta','ata','cusDecDate','declarationStatus','customsLine',
+  'taxPayDate','completedCusInspection','customsClearanceDate',
+  'truckPlate','driverTelephone','pickupAtPort','deliverToPlant','customerComplaint'
+];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MO_MAP = Object.fromEntries(MONTHS.map((m,i)=>[m,i]));
+
+/* ─── SUPABASE DATA LAYER ────────────────── */
+async function loadFromSupabase() {
+  const { data, error } = await sb
+    .from('shipments')
+    .select('*')
+    .order('no', { ascending: true });
+  if (error) throw error;
+  return (data || []).map(mapSupabaseRow);
+}
+
+function mapSupabaseRow(r) {
+  return {
+    no: r.no||'', poNo: r.po_no||'', invoiceNo: r.invoice_no||'',
+    containerNo: r.container_no||'', blNo: r.bl_no||'',
+    destinationPort: r.destination_port||'', plant: r.plant||'',
+    docRecDate: r.doc_rec_date||'', eta: r.eta||'', ata: r.ata||'',
+    cusDecDate: r.cus_dec_date||'', declarationStatus: r.declaration_status||'',
+    customsLine: r.customs_line||'', taxPayDate: r.tax_pay_date||'',
+    completedCusInspection: r.completed_cus_inspection||'',
+    customsClearanceDate: r.customs_clearance_date||'',
+    truckPlate: r.truck_plate||'', driverTelephone: r.driver_telephone||'',
+    pickupAtPort: r.pickup_at_port||'', deliverToPlant: r.deliver_to_plant||'',
+    customerComplaint: r.customer_complaint||'',
+  };
+}
+
+/* ─── DATA UTILITIES ─────────────────────── */
+function mapRow(r) { return Object.fromEntries(FIELDS.map((f,i)=>[f, r[i]||''])); }
+
+function parseDate(str) {
+  if (!str || !str.trim()) return null;
+  const m = str.trim().match(/^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2})\s+(\w{3})$/);
+  if (!m) return null;
+  const mo = MO_MAP[m[4]]; if (mo===undefined) return null;
+  return new Date(2026, mo, +m[3], +m[1], +m[2]);
+}
+function dateOnly(d) { return d ? new Date(d.getFullYear(),d.getMonth(),d.getDate()) : null; }
+function daysBetween(a,b) { return (!a||!b) ? null : Math.round((b-a)/86400000); }
+function fmtPct(v) { return v==null ? '—' : v.toFixed(1)+'%'; }
+
+/* ─── KPI CALC ───────────────────────────── */
+function calcKPIs(ships) {
+  const total        = ships.length;
+  const atPort       = ships.filter(s=>s.ata&&s.pickupAtPort==='No').length;
+  const inTransit    = ships.filter(s=>s.pickupAtPort==='Yes'&&s.deliverToPlant==='No').length;
+  const delivered    = ships.filter(s=>s.deliverToPlant==='Yes').length;
+  const declarations = ships.filter(s=>s.cusDecDate).length;
+  const cleared      = ships.filter(s=>s.customsClearanceDate).length;
+  const green        = ships.filter(s=>s.customsLine==='Green').length;
+  const yellow       = ships.filter(s=>s.customsLine==='Yellow').length;
+  const red          = ships.filter(s=>s.customsLine==='Red').length;
+  const correct      = ships.filter(s=>s.declarationStatus==='Correct').length;
+  const incorrect    = ships.filter(s=>s.declarationStatus==='Incorrect').length;
+  const decAcc       = declarations>0 ? (correct/declarations*100) : 0;
+  const complaints   = ships.filter(s=>s.customerComplaint&&s.customerComplaint!=='No Complaint').length;
+  const withDates    = ships.filter(s=>s.eta&&s.ata);
+  const onTime       = withDates.filter(s=>{
+    const e=dateOnly(parseDate(s.eta)),a=dateOnly(parseDate(s.ata));
+    return e&&a&&a<=e;
+  }).length;
+  const onTimeRate = withDates.length>0 ? (onTime/withDates.length*100) : 0;
+  const ctimes = ships.filter(s=>s.ata&&s.customsClearanceDate)
+    .map(s=>daysBetween(dateOnly(parseDate(s.ata)),dateOnly(parseDate(s.customsClearanceDate))))
+    .filter(v=>v!=null&&v>=0);
+  const avgClear = ctimes.length>0 ? ctimes.reduce((a,b)=>a+b,0)/ctimes.length : null;
+  return { total,atPort,inTransit,delivered,declarations,cleared,green,yellow,red,
+           correct,incorrect,decAcc,complaints,onTimeRate,onTime,
+           withDates:withDates.length,avgClear };
+}
+
+/* ─── CHART DATA ─────────────────────────── */
+function monthlyAccuracy(ships) {
+  const m={};
+  ships.filter(s=>s.cusDecDate&&s.declarationStatus).forEach(s=>{
+    const d=parseDate(s.cusDecDate); if(!d)return;
+    const k=MONTHS[d.getMonth()];
+    if(!m[k])m[k]={c:0,t:0}; m[k].t++;
+    if(s.declarationStatus==='Correct')m[k].c++;
+  });
+  return MONTHS.map(mo=>({label:mo,rate:m[mo]?+(m[mo].c/m[mo].t*100).toFixed(1):null,n:m[mo]?.t||0}));
+}
+function monthlyOnTime(ships) {
+  const m={};
+  ships.filter(s=>s.eta&&s.ata).forEach(s=>{
+    const d=parseDate(s.eta); if(!d)return;
+    const k=MONTHS[d.getMonth()];
+    if(!m[k])m[k]={ok:0,t:0}; m[k].t++;
+    const e=dateOnly(d),a=dateOnly(parseDate(s.ata));
+    if(a&&a<=e)m[k].ok++;
+  });
+  return MONTHS.map(mo=>({label:mo,rate:m[mo]?+(m[mo].ok/m[mo].t*100).toFixed(1):null,n:m[mo]?.t||0}));
+}
+function monthlyVolume(ships) {
+  const m={};
+  ships.filter(s=>s.eta).forEach(s=>{
+    const d=parseDate(s.eta); if(!d)return;
+    const k=MONTHS[d.getMonth()]; m[k]=(m[k]||0)+1;
+  });
+  return MONTHS.map(mo=>({label:mo,count:m[mo]||0}));
+}
+function byGroup(ships,key) {
+  const m={};
+  ships.forEach(s=>{ if(s[key])m[s[key]]=(m[s[key]]||0)+1; });
+  return Object.entries(m).sort((a,b)=>b[1]-a[1]);
+}
+
+/* ─── CHART COMPONENT ────────────────────── */
+const CDEFS = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{display:false}, tooltip:{mode:'index',intersect:false} },
+  scales:{
+    x:{grid:{display:false},ticks:{font:{size:11,family:"'Plus Jakarta Sans',sans-serif"},color:'#7b809a'}},
+    y:{grid:{color:'#f0f0f0'},ticks:{font:{size:11,family:"'Plus Jakarta Sans',sans-serif"},color:'#7b809a'}}
+  }
+};
+function ChartEl({config,height=220}) {
+  const cvs=useRef(null), ch=useRef(null), key=useRef(null);
+  const nk=JSON.stringify(config);
+  useEffect(()=>{
+    if(!cvs.current||!config)return;
+    if(ch.current){ch.current.destroy();ch.current=null;}
+    ch.current=new Chart(cvs.current.getContext('2d'),config);
+    key.current=nk;
+  },[nk]);
+  useEffect(()=>()=>{if(ch.current)ch.current.destroy();},[]);
+  return <canvas ref={cvs} style={{maxHeight:height+'px'}} />;
+}
+
+/* ─── SMALL COMPONENTS ───────────────────── */
+const IBox    = ()=><svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>;
+const IShip   = ()=><svg viewBox="0 0 24 24"><path d="M3 17l1.5-7L12 5l7.5 5L21 17H3zm9-12v5M5.5 10v4M18.5 10v4"/></svg>;
+const ITruck  = ()=><svg viewBox="0 0 24 24"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8zM5.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm13 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>;
+const IDoc    = ()=><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 13h8M8 17h5"/></svg>;
+const ICheck  = ()=><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>;
+const ITime   = ()=><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>;
+const IDash   = ()=><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>;
+const IRefresh=()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>;
+const IWarn   = ()=><svg viewBox="0 0 24 24"><path d="M12 2L2 19h20L12 2zm0 7v5m0 3v1"/></svg>;
+
+function Badge({val}) {
+  if(!val)return null;
+  const v=val.trim();
+  const cls=v==='Green'?'badge bg-green':v==='Yellow'?'badge bg-yellow':v==='Red'?'badge bg-red':
+    v==='Correct'?'badge bg-green':v==='Incorrect'?'badge bg-warn':
+    v==='Yes'?'badge bg-blue':v==='No'?'badge bg-gray':'badge bg-warn';
+  const dot=v==='Green'?'#2e7d32':v==='Yellow'?'#f57f17':v==='Red'?'#c62828':null;
+  return <span className={cls}>{dot&&<span className="bdot" style={{background:dot}}/>}{v}</span>;
+}
+
+function KpiCard({label,value,sub,gradient,icon:Icon}) {
+  return (
+    <div className="kpi-card">
+      <div className={`kpi-ico ${gradient}`}><Icon/></div>
+      <div className="kpi-body">
+        <div className="kpi-lbl">{label}</div>
+        <div className="kpi-val">{value}</div>
+        {sub&&<div className="kpi-sub" dangerouslySetInnerHTML={{__html:sub}}/>}
+      </div>
+    </div>
+  );
+}
+
+/* ─── LIVE PULSE INDICATOR ───────────────── */
+function LivePulse({busy}) {
+  return busy
+    ? <span style={{fontSize:'.7rem',color:'var(--muted)'}}>Đang cập nhật…</span>
+    : <span style={{display:'flex',alignItems:'center',gap:'.3rem',fontSize:'.7rem',color:'#43A047',fontWeight:600}}>
+        <span style={{width:'.45rem',height:'.45rem',borderRadius:'50%',background:'#43A047',display:'inline-block',animation:'pulse 1.5s infinite'}}/>
+        Realtime
+      </span>;
+}
+
+/* ─── DONUT CHART ────────────────────────── */
+function DonutChannels({g,y,r}) {
+  const total=g+y+r;
+  const cfg={
+    type:'doughnut',
+    data:{labels:['Luồng Xanh','Luồng Vàng','Luồng Đỏ'],
+      datasets:[{data:[g,y,r],backgroundColor:['#43A047','#FFA726','#E53935'],borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'72%',
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${total?((ctx.parsed/total)*100).toFixed(1):0}%)`}}}}
+  };
+  return (
+    <div>
+      <div style={{height:180,position:'relative'}}><ChartEl config={cfg} height={180}/></div>
+      <div className="donut-legend">
+        {[['Luồng Xanh','#43A047',g],['Luồng Vàng','#FFA726',y],['Luồng Đỏ','#E53935',r]].map(([lb,col,n])=>(
+          <div className="dl-item" key={lb}>
+            <div className="dl-lbl"><span className="dl-dot" style={{background:col}}/>{lb}</div>
+            <div><span className="dl-val">{n}</span><span style={{color:'var(--muted)',marginLeft:'.3rem',fontSize:'.72rem'}}>({total?((n/total)*100).toFixed(1):0}%)</span></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── LINE CHARTS ────────────────────────── */
+function LineAcc({data}) {
+  const cfg={type:'line',data:{labels:data.map(d=>d.label),datasets:[{label:'Chính xác (%)',data:data.map(d=>d.rate),borderColor:'#1A73E8',backgroundColor:'rgba(26,115,232,.1)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#1A73E8',fill:true,tension:.4,spanGaps:false}]},
+    options:{...CDEFS,plugins:{...CDEFS.plugins,tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y?.toFixed(1)}%`}}},
+      scales:{...CDEFS.scales,y:{...CDEFS.scales.y,min:0,max:100,ticks:{...CDEFS.scales.y.ticks,callback:v=>`${v}%`}}}}};
+  return <ChartEl config={cfg} height={220}/>;
+}
+function LineOT({data}) {
+  const cfg={type:'line',data:{labels:data.map(d=>d.label),datasets:[{label:'Đúng hạn (%)',data:data.map(d=>d.rate),borderColor:'#43A047',backgroundColor:'rgba(67,160,71,.1)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#43A047',fill:true,tension:.4,spanGaps:false}]},
+    options:{...CDEFS,plugins:{...CDEFS.plugins,tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y?.toFixed(1)}%`}}},
+      scales:{...CDEFS.scales,y:{...CDEFS.scales.y,min:0,max:100,ticks:{...CDEFS.scales.y.ticks,callback:v=>`${v}%`}}}}};
+  return <ChartEl config={cfg} height={220}/>;
+}
+
+/* ─── BAR CHARTS ─────────────────────────── */
+function BarH({data}) {
+  const cfg={type:'bar',data:{labels:data.map(([p])=>p.replace(/ Port| Plant/,'')),
+    datasets:[{data:data.map(([,n])=>n),backgroundColor:'rgba(26,115,232,.7)',borderRadius:6,borderSkipped:false}]},
+    options:{...CDEFS,indexAxis:'y',plugins:{...CDEFS.plugins,tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}`}}},
+      scales:{x:{...CDEFS.scales.x,grid:{color:'#f0f0f0'}},y:{grid:{display:false},ticks:{font:{size:11,family:"'Plus Jakarta Sans',sans-serif"},color:'#344767'}}}}};
+  return <ChartEl config={cfg} height={180}/>;
+}
+function BarVol({data}) {
+  const max=Math.max(...data.map(d=>d.count),1);
+  const cfg={type:'bar',data:{labels:data.map(d=>d.label),datasets:[{data:data.map(d=>d.count),backgroundColor:data.map(d=>d.count===max?'rgba(26,115,232,.85)':'rgba(26,115,232,.3)'),borderRadius:6,borderSkipped:false}]},
+    options:{...CDEFS,plugins:{...CDEFS.plugins,tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y}`}}}}};
+  return <ChartEl config={cfg} height={180}/>;
+}
+
+/* ─── TABLE ──────────────────────────────── */
+const PAGE=20;
+function Table({ships}) {
+  const [q,setQ]=useState('');
+  const [pf,setPf]=useState('');
+  const [lf,setLf]=useState('');
+  const [df,setDf]=useState('');
+  const [pg,setPg]=useState(1);
+  const ports=[...new Set(ships.map(s=>s.destinationPort))].filter(Boolean).sort();
+  const rows=ships.filter(s=>{
+    const ql=q.toLowerCase();
+    if(ql&&![s.poNo,s.containerNo,s.blNo,s.invoiceNo,s.plant].some(v=>v.toLowerCase().includes(ql)))return false;
+    if(pf&&s.destinationPort!==pf)return false;
+    if(lf&&s.customsLine!==lf)return false;
+    if(df&&s.declarationStatus!==df)return false;
+    return true;
+  });
+  const tp=Math.max(1,Math.ceil(rows.length/PAGE));
+  const p=Math.min(pg,tp);
+  const slice=rows.slice((p-1)*PAGE,p*PAGE);
+  useEffect(()=>setPg(1),[q,pf,lf,df]);
+  const go=n=>setPg(Math.max(1,Math.min(tp,n)));
+  return (
+    <div className="tbl-card">
+      <div className="tbl-hdr">
+        <div className="tbl-title">Danh Sách Lô Hàng <span>({rows.length} / {ships.length})</span></div>
+        <div className="filters">
+          <input className="finput" placeholder="🔍 PO / Container / BL…" value={q} onChange={e=>setQ(e.target.value)}/>
+          <select className="fsel" value={pf} onChange={e=>setPf(e.target.value)}>
+            <option value="">Tất cả cảng</option>{ports.map(p=><option key={p}>{p}</option>)}
+          </select>
+          <select className="fsel" value={lf} onChange={e=>setLf(e.target.value)}>
+            <option value="">Tất cả luồng</option>
+            <option>Green</option><option>Yellow</option><option>Red</option>
+          </select>
+          <select className="fsel" value={df} onChange={e=>setDf(e.target.value)}>
+            <option value="">Tất cả tờ khai</option>
+            <option>Correct</option><option>Incorrect</option>
+          </select>
+        </div>
+      </div>
+      <div className="tbl-scroll">
+        <table>
+          <thead><tr>
+            <th>#</th><th>PO No</th><th>Container No</th><th>BL No</th>
+            <th>Cảng</th><th>Nhà Máy</th><th>ETA</th><th>ATA</th>
+            <th>Tờ Khai</th><th>Luồng</th><th>Thông Quan</th>
+            <th>Lấy Cont</th><th>Giao NM</th><th>Phản Ánh</th>
+          </tr></thead>
+          <tbody>
+            {slice.length===0
+              ? <tr><td colSpan={14} style={{textAlign:'center',color:'var(--muted)',padding:'2rem'}}>Không có dữ liệu phù hợp</td></tr>
+              : slice.map(s=>{
+                const late=(()=>{const e=parseDate(s.eta),a=parseDate(s.ata);return e&&a&&dateOnly(a)>dateOnly(e);})();
+                return(
+                  <tr key={s.no}>
+                    <td style={{color:'var(--muted)'}}>{s.no}</td>
+                    <td style={{fontWeight:600}}>{s.poNo}</td>
+                    <td style={{fontFamily:'monospace',fontSize:'.76rem'}}>{s.containerNo}</td>
+                    <td style={{fontFamily:'monospace',fontSize:'.76rem'}}>{s.blNo}</td>
+                    <td>{s.destinationPort.replace(' Port','')}</td>
+                    <td>{s.plant.replace(' Plant','')}</td>
+                    <td>{s.eta}</td>
+                    <td style={{color:late?'#c62828':'inherit',fontWeight:late?600:400}}>{s.ata}{late&&' ⚠'}</td>
+                    <td><Badge val={s.declarationStatus}/></td>
+                    <td><Badge val={s.customsLine}/></td>
+                    <td style={{fontSize:'.72rem'}}>{s.customsClearanceDate}</td>
+                    <td><Badge val={s.pickupAtPort}/></td>
+                    <td><Badge val={s.deliverToPlant}/></td>
+                    <td>{s.customerComplaint&&s.customerComplaint!=='No Complaint'
+                      ?<span className="badge bg-warn">{s.customerComplaint}</span>
+                      :<span style={{color:'var(--muted)',fontSize:'.72rem'}}>—</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+          </tbody>
+        </table>
+      </div>
+      <div className="tbl-foot">
+        <span>Trang {p} / {tp} · {rows.length} bản ghi</span>
+        <div className="pager">
+          <button className="pbtn" onClick={()=>go(1)} disabled={p===1}>«</button>
+          <button className="pbtn" onClick={()=>go(p-1)} disabled={p===1}>‹</button>
+          {Array.from({length:Math.min(5,tp)},(_,i)=>{
+            const s=Math.max(1,Math.min(p-2,tp-4)), pn=s+i;
+            return pn<=tp?<button key={pn} className={`pbtn${pn===p?' on':''}`} onClick={()=>go(pn)}>{pn}</button>:null;
+          })}
+          <button className="pbtn" onClick={()=>go(p+1)} disabled={p===tp}>›</button>
+          <button className="pbtn" onClick={()=>go(tp)} disabled={p===tp}>»</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── TOAST ──────────────────────────────── */
+function Toast({msg,onDismiss}) {
+  useEffect(()=>{ const t=setTimeout(onDismiss,3500); return ()=>clearTimeout(t); },[onDismiss]);
+  return <div className="toast" onClick={onDismiss}><span className="toast-dot"/>{msg}</div>;
+}
+
+/* ─── LOADING SCREEN ─────────────────────── */
+function LoadingScreen() {
+  const [secs, setSecs] = useState(0);
+  useEffect(()=>{ const t=setInterval(()=>setSecs(s=>s+1),1000); return()=>clearInterval(t); },[]);
+  return(
+    <div className="loading">
+      <div className="spinner"/>
+      <div style={{fontSize:'.85rem'}}>Đang kết nối Google Sheets…</div>
+      {secs>=5&&(
+        <div style={{marginTop:'.75rem',background:'#fff3cd',border:'1px solid #ffc107',borderRadius:'.6rem',padding:'.65rem 1.1rem',fontSize:'.78rem',color:'#856404',maxWidth:400,textAlign:'center'}}>
+          ⏳ Đang chờ {secs}s… Nếu Sheet chưa được chia sẻ công khai, sẽ báo lỗi sau {Math.max(0,8-secs)}s nữa.
+        </div>
+      )}
+      {secs>=3&&secs<5&&(
+        <div style={{fontSize:'.75rem',color:'var(--muted)'}}>
+          Đảm bảo Sheet được chia sẻ "Anyone with the link"…
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── APP ────────────────────────────────── */
+function App() {
+  const [ships,   setShips]  = useState([]);
+  const [lu,      setLu]     = useState(null);
+  const [loading, setLoading]= useState(true);
+  const [busy,    setBusy]   = useState(false);
+  const [err,     setErr]    = useState(null);
+  const [toast,   setToast]  = useState(null);
+  const toastDismiss = useCallback(()=>setToast(null),[]);
+
+  const fetchData = useCallback(async (silent=false) => {
+    if(!silent) setBusy(true);
+    try {
+      const mapped = await loadFromSupabase();
+      setShips(mapped);
+      setLu(new Date().toISOString());
+      setLoading(false); setBusy(false); setErr(null);
+      if(silent) setToast('Dữ liệu vừa được cập nhật!');
+    } catch(e) {
+      if(!silent) setErr(e.message);
+      setLoading(false); setBusy(false);
+    }
+  },[]);
+
+  // Initial load
+  useEffect(()=>{ fetchData(false); },[fetchData]);
+
+  // Supabase Realtime — nhận tín hiệu khi sync hoàn thành
+  useEffect(()=>{
+    const channel = sb
+      .channel('sync-log-channel')
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'sync_log' },
+        () => fetchData(true)
+      )
+      .subscribe();
+    return ()=>{ sb.removeChannel(channel); };
+  },[fetchData]);
+
+  if(loading) return <LoadingScreen/>;
+
+  if(err&&!ships.length) {
+    const isTimeout = err==='TIMEOUT'||err.startsWith('SHEET_ERROR');
+    return(
+      <div className="loading">
+        <div className="err-box" style={{maxWidth:520}}>
+          <b style={{fontSize:'1rem'}}>⚠ Không kết nối được Google Sheets</b>
+          <div style={{marginTop:'1rem',textAlign:'left',fontSize:'.82rem',lineHeight:1.7}}>
+            <b>Nguyên nhân thường gặp:</b>
+            <ol style={{paddingLeft:'1.25rem',marginTop:'.5rem',display:'flex',flexDirection:'column',gap:'.3rem'}}>
+              <li>Sheet chưa được chia sẻ công khai <b>(phổ biến nhất)</b></li>
+              <li>Mạng bị chặn truy cập docs.google.com</li>
+              <li>Sheet ID sai</li>
+            </ol>
+          </div>
+          <div style={{background:'#fff8e1',border:'1px solid #ffe082',borderRadius:'.5rem',padding:'.75rem 1rem',margin:'1rem 0',textAlign:'left',fontSize:'.82rem',lineHeight:1.7}}>
+            <b>✅ Cách fix:</b><br/>
+            1. Kiểm tra <b>SUPABASE_URL</b> và <b>SUPABASE_KEY</b> đã điền đúng trong file<br/>
+            2. Đảm bảo bảng <code>shipments</code> và <code>sync_log</code> đã tạo trong Supabase<br/>
+            3. Chạy lại <b>/api/sync</b> để đồng bộ dữ liệu từ Google Sheets
+          </div>
+          {isTimeout
+            ? <code style={{fontSize:'.72rem',background:'#f5f5f5',color:'#555'}}>Lỗi: Sheet không phản hồi (timeout 8s) — Sheet chưa public hoặc mạng bị chặn</code>
+            : <code style={{fontSize:'.72rem',background:'#f5f5f5',color:'#555'}}>{err}</code>
+          }
+          <button onClick={()=>fetchData(false)} style={{marginTop:'1rem'}}>↺ Thử lại</button>
+        </div>
+      </div>
+    );
+  }
+
+  const kpi=calcKPIs(ships);
+  const accMo=monthlyAccuracy(ships);
+  const otMo=monthlyOnTime(ships);
+  const volMo=monthlyVolume(ships);
+  const portD=byGroup(ships,'destinationPort');
+  const plantD=byGroup(ships,'plant');
+
+  return (
+    <>
+      {/* SIDEBAR */}
+      <aside className="sidebar">
+        <div className="sb-logo">
+          <div className="sb-icon"><IShip/></div>
+          <div className="sb-brand">DP World<small>T&amp;C Dashboard</small></div>
+        </div>
+        <div className="nav-sec">Menu</div>
+        <div className="nav-link active"><IDash/><span>Dashboard</span></div>
+        <div className="nav-link"><IDoc/><span>Tờ Khai</span></div>
+        <div className="nav-link"><ITruck/><span>Vận Chuyển</span></div>
+        <div className="sb-foot">
+          <div className="sb-status">
+            <div className="dot" style={{background:busy?'#FFA726':'#82d616'}}/>
+            <span>{busy?'Đang cập nhật…':'Live · '+(lu?new Date(lu).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'-')}</span>
+          </div>
+          <div style={{fontSize:'.65rem',color:'rgba(255,255,255,.25)',padding:'0 1rem .5rem'}}>
+            Poll mỗi 5s · phát hiện thay đổi tức thì
+          </div>
+        </div>
+      </aside>
+
+      {toast&&<Toast msg={toast} onDismiss={toastDismiss}/>}
+
+      {/* MAIN */}
+      <div className="main">
+        {/* TOPBAR */}
+        <div className="topbar">
+          <div className="breadcrumb"><span style={{color:'var(--muted)'}}>Trang chủ / </span><b>Dashboard Tổng Quan</b></div>
+          <div className="topbar-r">
+            <div className="live-badge"><span className="live-dot"/>LIVE</div>
+            {lu&&<span className="last-upd">Cập nhật {new Date(lu).toLocaleTimeString('vi-VN')}</span>}
+            <LivePulse busy={busy}/>
+            <button className={`btn-refresh${busy?' spin':''}`} onClick={()=>fetchData(false)} disabled={busy}>
+              <IRefresh/>{busy?'Đang tải…':'Làm mới'}
+            </button>
+          </div>
+        </div>
+
+        <div className="content">
+          {/* SHARE NOTICE — shown when data might be stale */}
+          {err&&<div className="notice">
+            <IWarn/>
+            <span>Cảnh báo: {err}. Đảm bảo Sheet được chia sẻ <b>Anyone with the link → Viewer</b>.</span>
+          </div>}
+
+          {/* KPI CARDS */}
+          <div className="kpi-grid">
+            <KpiCard label="Tổng Container" value={kpi.total}
+              sub={`<span class="up">↑ ${kpi.cleared} đã thông quan</span>`} gradient="g-dark" icon={IBox}/>
+            <KpiCard label="Container Tại Cảng" value={kpi.atPort}
+              sub={`Chưa lấy cont · <b>${kpi.inTransit}</b> đang vận chuyển`} gradient="g-orange" icon={IShip}/>
+            <KpiCard label="Container Đã Giao NM" value={kpi.delivered}
+              sub={`<span class="up">${kpi.total?(kpi.delivered/kpi.total*100).toFixed(1):0}%</span> tổng lô hàng`} gradient="g-green" icon={ITruck}/>
+            <KpiCard label="Số Lượng Tờ Khai" value={kpi.declarations}
+              sub={`<span class="up">${kpi.correct} chính xác</span> · <span class="dn">${kpi.incorrect} sai</span>`} gradient="g-blue" icon={IDoc}/>
+            <KpiCard label="Tỉ Lệ Chính Xác TK" value={fmtPct(kpi.decAcc)}
+              sub={`Luồng đỏ: <b class="dn">${kpi.red}</b> · <span class="wa">Vàng: ${kpi.yellow}</span> · <span class="up">Xanh: ${kpi.green}</span>`} gradient="g-purple" icon={ICheck}/>
+            <KpiCard label="Tỉ Lệ Giao Đúng Hạn" value={fmtPct(kpi.onTimeRate)}
+              sub={`${kpi.onTime}/${kpi.withDates} lô · Phản ánh: <span class="dn">${kpi.complaints}</span>`}
+              gradient={kpi.onTimeRate>=80?'g-green':'g-red'} icon={ITime}/>
+          </div>
+
+          {/* CHARTS ROW 1 */}
+          <div className="charts-row cr2">
+            <div className="chart-card">
+              <div className="cc-hdr"><div className="cc-title">Tỉ Lệ Chính Xác Tờ Khai Theo Tháng</div>
+                <div className="cc-sub">Ngày khai báo (Cus Dec Date) · Tổng: {fmtPct(kpi.decAcc)}</div></div>
+              <div className="cw"><LineAcc data={accMo}/></div>
+            </div>
+            <div className="chart-card">
+              <div className="cc-hdr"><div className="cc-title">Tỷ Lệ Luồng Tờ Khai</div>
+                <div className="cc-sub">Phân bổ luồng hải quan</div></div>
+              <DonutChannels g={kpi.green} y={kpi.yellow} r={kpi.red}/>
+            </div>
+          </div>
+
+          {/* CHARTS ROW 2 */}
+          <div className="charts-row cr2">
+            <div className="chart-card">
+              <div className="cc-hdr"><div className="cc-title">Tỉ Lệ Giao Hàng Đúng Hạn Theo Tháng</div>
+                <div className="cc-sub">ATA ≤ ETA · Tổng: {fmtPct(kpi.onTimeRate)}</div></div>
+              <div className="cw"><LineOT data={otMo}/></div>
+            </div>
+            <div className="chart-card">
+              <div className="cc-hdr"><div className="cc-title">Container Theo Cảng Đến</div>
+                <div className="cc-sub">Số lượng theo điểm đến</div></div>
+              <div className="cw-sm"><BarH data={portD}/></div>
+            </div>
+          </div>
+
+          {/* CHARTS ROW 3 */}
+          <div className="charts-row cr2">
+            <div className="chart-card">
+              <div className="cc-hdr"><div className="cc-title">Khối Lượng Container Theo Tháng</div>
+                <div className="cc-sub">Dựa trên ETA</div></div>
+              <div className="cw"><BarVol data={volMo}/></div>
+            </div>
+            <div className="chart-card">
+              <div className="cc-hdr"><div className="cc-title">Container Theo Nhà Máy</div>
+                <div className="cc-sub">Phân bổ điểm giao hàng</div></div>
+              <div className="cw-sm"><BarH data={plantD}/></div>
+            </div>
+          </div>
+
+          {/* TABLE */}
+          <Table ships={ships}/>
+        </div>
+      </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

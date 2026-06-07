@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #344767;
+  --color-dark: #252f40;
+  --color-info: #1A73E8;
+  --color-success: #82d616;
+  --color-warning: #f53939;
+  --color-danger: #ea0606;
+  --color-bg: #f8f9fa;
+  --gradient-dark: linear-gradient(310deg, #141727, #3A416F);
+  --gradient-info: linear-gradient(310deg, #2152ff, #21d4fd);
+  --gradient-success: linear-gradient(310deg, #17ad37, #98ec2d);
+  --gradient-warning: linear-gradient(310deg, #f53939, #fbcf33);
+  --radius-card: 1rem;
+  --card-shadow: 0 20px 27px 0 rgba(0,0,0,0.05);
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--color-bg);
+  margin: 0;
+}
+
+* { box-sizing: border-box; }
+
+#root { width: 100%; }
+
+.sidebar-bg {
+  background: linear-gradient(195deg, #42424a, #191919);
+}
+
+.gradient-dark    { background: var(--gradient-dark); }
+.gradient-info    { background: var(--gradient-info); }
+.gradient-success { background: var(--gradient-success); }
+.gradient-warning { background: var(--gradient-warning); }
+
+.card {
+  background: #fff;
+  border-radius: var(--radius-card);
+  box-shadow: var(--card-shadow);
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
