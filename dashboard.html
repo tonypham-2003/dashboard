@@ -509,6 +509,37 @@ function Toast({msg,onDismiss}) {
   return <div className="toast" onClick={onDismiss}><span className="toast-dot"/>{msg}</div>;
 }
 
+/* ─── SYNC BUTTON ────────────────────────── */
+const SYNC_URL = '/api/sync';
+function SyncButton({onDone}) {
+  const [syncing,setSyncing] = useState(false);
+  const [msg,    setMsg]     = useState(null);
+  const doSync = async () => {
+    setSyncing(true); setMsg(null);
+    try {
+      const r = await fetch(SYNC_URL);
+      const j = await r.json();
+      setMsg(r.ok ? `✅ ${j.rows} dòng` : `❌ ${j.error}`);
+      if(r.ok && onDone) onDone();
+    } catch(e) { setMsg('❌ ' + e.message); }
+    finally { setSyncing(false); setTimeout(()=>setMsg(null),3000); }
+  };
+  return (
+    <div style={{display:'flex',alignItems:'center',gap:'.4rem'}}>
+      <button
+        onClick={doSync} disabled={syncing}
+        style={{display:'flex',alignItems:'center',gap:'.4rem',
+          background:syncing?'#e0e0e0':'linear-gradient(195deg,#66BB6A,#43A047)',
+          color:syncing?'#999':'white',border:'none',borderRadius:'.5rem',
+          padding:'.45rem .9rem',fontSize:'.78rem',fontWeight:600,
+          cursor:syncing?'default':'pointer',fontFamily:'var(--font)'}}>
+        {syncing?'Đang sync…':'⟳ Sync Sheet'}
+      </button>
+      {msg&&<span style={{fontSize:'.72rem',fontWeight:600,color:msg.startsWith('✅')?'#2e7d32':'#c62828'}}>{msg}</span>}
+    </div>
+  );
+}
+
 /* ─── LOADING SCREEN ─────────────────────── */
 function LoadingScreen() {
   const [secs, setSecs] = useState(0);
@@ -646,6 +677,7 @@ function App() {
             <button className={`btn-refresh${busy?' spin':''}`} onClick={()=>fetchData(false)} disabled={busy}>
               <IRefresh/>{busy?'Đang tải…':'Làm mới'}
             </button>
+            <SyncButton onDone={()=>fetchData(true)}/>
           </div>
         </div>
 
