@@ -1,10 +1,6 @@
-// /api/sync — Vercel Serverless Function
-// Đọc Google Sheet qua CSV public URL (không cần API key, không cần OAuth)
-// Được gọi bởi cron-job.org mỗi phút, hoặc bằng nút Sync trên dashboard.
-
+// /api/sync — nhận data từ Apps Script (POST) hoặc trigger thủ công
 const { createClient } = require('@supabase/supabase-js');
 
-const SHEET_ID = '1yZjvoIynV9NejrE4mBHW_niRKTqD1UCP41VcyqbbfvY';
 const COLS = [
   'no','po_no','invoice_no','container_no','bl_no','destination_port','plant',
   'doc_rec_date','eta','ata','cus_dec_date','declaration_status','customs_line',
@@ -12,55 +8,32 @@ const COLS = [
   'truck_plate','driver_telephone','pickup_at_port','deliver_to_plant','customer_complaint'
 ];
 
-function parseCSV(text) {
-  const lines = text.replace(/^﻿/, '').trim().split('\n');
-  lines.shift(); // bỏ dòng header
-  return lines.map(line => {
-    const cols = [];
-    let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-      if (c === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
-      else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
-      else cur += c;
-    }
-    cols.push(cur.trim());
-    return cols;
-  });
-}
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    // Thử 2 URL: export trực tiếp (ổn định hơn) rồi fallback sang gviz
-    const urls = [
-      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`,
-      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Sheet1`,
-    ];
-    let csvRes, lastErr;
-    for (const csvUrl of urls) {
-      try {
-        csvRes = await fetch(csvUrl, { signal: AbortSignal.timeout(15000) });
-        if (csvRes.ok) break;
-        lastErr = `HTTP ${csvRes.status} from ${csvUrl}`;
-      } catch (e) { lastErr = `${e.message} (${csvUrl})`; csvRes = null; }
-    }
-    if (!csvRes || !csvRes.ok) throw new Error(`Không lấy được Sheet CSV: ${lastErr}`);
+    let rows = [];
 
-    const csvText = await csvRes.text();
-    const parsed  = parseCSV(csvText);
-    const rows    = parsed
-      .filter(cols => cols[0] && cols[0] !== '')
-      .map(cols => Object.fromEntries(COLS.map((c, i) => [c, cols[i] || ''])));
-
-    if (rows.length === 0) {
-      return res.status(200).json({ message: 'Sheet trống', rows: 0 });
+    if (req.method === 'POST') {
+      // Data được push từ Apps Script
+      const body = req.body || {};
+      const secret = process.env.SYNC_SECRET || 'tc2026secret';
+      if (body.secret && body.secret !== secret) {
+        return res.status(401).json({ error: 'unauthorized' });
+      }
+      rows = body.rows || [];
+      if (!Array.isArray(rows) || rows.length === 0) {
+        return res.status(400).json({ error: 'rows trống hoặc sai định dạng' });
+      }
+    } else {
+      return res.status(200).json({
+        message: 'Sync endpoint hoạt động. Dùng POST từ Apps Script để gửi data.'
+      });
     }
 
-    // ── Lưu vào Supabase ──────────────────────────────────────────────────
     const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_KEY
@@ -72,7 +45,6 @@ module.exports = async function handler(req, res) {
     const { error: insErr } = await supabase.from('shipments').insert(rows);
     if (insErr) throw insErr;
 
-    // sync_log INSERT → kích hoạt Supabase Realtime → dashboard cập nhật
     await supabase.from('sync_log').insert({ rows_count: rows.length });
 
     console.log(`[sync] ✅ ${rows.length} rows — ${new Date().toISOString()}`);
