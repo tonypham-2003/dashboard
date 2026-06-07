@@ -1,16 +1,14 @@
 /**
- * T&C Dashboard — Apps Script
- *
- * Flow: Sheet thay đổi → đọc data trực tiếp → POST lên Vercel /api/sync
- *       Không dùng Google Sheets API, không cần API key.
+ * T&C Dashboard — Apps Script → Supabase trực tiếp
+ * Khi Sheet thay đổi → đọc data → POST lên Supabase REST API
  *
  * SETUP (chạy 1 lần):
- *   1. Điền VERCEL_SYNC_URL và SYNC_SECRET bên dưới
- *   2. Extensions → Apps Script → Run → setupTrigger
+ *   1. Apps Script → Project Settings → Script Properties
+ *      Thêm: SUPABASE_KEY = <service role key của bạn>
+ *   2. Chạy hàm setupTrigger() một lần
  */
 
-var VERCEL_SYNC_URL = 'https://dashboard-g568ovtbc-2003phamgiahuy-8957s-projects.vercel.app/api/sync';
-var SYNC_SECRET     = 'tc2026secret';  // phải khớp với Vercel env var
+var SUPABASE_URL = 'https://shuiloynbgpazmipcxkz.supabase.co';
 
 var COLS = [
   'no','po_no','invoice_no','container_no','bl_no','destination_port','plant',
@@ -19,61 +17,74 @@ var COLS = [
   'truck_plate','driver_telephone','pickup_at_port','deliver_to_plant','customer_complaint'
 ];
 
-/* ── Trigger: tự động gọi khi Sheet thay đổi ── */
-function onSheetChange(e) {
-  syncNow();
+function getKey() {
+  return PropertiesService.getScriptProperties().getProperty('SUPABASE_KEY');
 }
 
-/* ── Đọc sheet → POST lên Vercel ── */
+function onSheetChange(e) { syncNow(); }
+
 function syncNow() {
   try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+    var key = getKey();
+    if (!key) { Logger.log('❌ Chưa set SUPABASE_KEY trong Script Properties'); return; }
+
+    var sheet   = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
     var lastRow = sheet.getLastRow();
-    if (lastRow < 2) {
-      Logger.log('Sheet trống, bỏ qua sync.');
-      return;
-    }
+    if (lastRow < 2) { Logger.log('Sheet trống.'); return; }
 
-    var raw = sheet.getRange(2, 1, lastRow - 1, 21).getValues();
-
+    var raw  = sheet.getRange(2, 1, lastRow - 1, 21).getValues();
     var rows = raw
-      .filter(function(r) { return r[0] !== '' && r[0] !== null && r[0] !== undefined; })
+      .filter(function(r) { return r[0] !== '' && r[0] !== null; })
       .map(function(r) {
         var obj = {};
-        COLS.forEach(function(col, i) {
-          obj[col] = String(r[i] == null ? '' : r[i]).trim();
-        });
+        COLS.forEach(function(col, i) { obj[col] = String(r[i] == null ? '' : r[i]).trim(); });
         return obj;
       });
 
-    var payload = JSON.stringify({ secret: SYNC_SECRET, rows: rows });
+    var headers = {
+      'Authorization': 'Bearer ' + key,
+      'apikey':        key,
+      'Content-Type':  'application/json',
+      'Prefer':        'return=minimal'
+    };
 
-    var response = UrlFetchApp.fetch(VERCEL_SYNC_URL, {
-      method: 'post',
-      contentType: 'application/json',
-      payload: payload,
-      muteHttpExceptions: true
+    // Xóa hết data cũ
+    UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/shipments?id=gte.0', {
+      method: 'delete', headers: headers, muteHttpExceptions: true
     });
 
-    Logger.log('Sync ' + rows.length + ' rows → ' + response.getResponseCode()
-      + ': ' + response.getContentText().substring(0, 200));
+    // Insert data mới (batch 50)
+    for (var i = 0; i < rows.length; i += 50) {
+      var batch = rows.slice(i, i + 50);
+      var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/shipments', {
+        method: 'post', headers: headers,
+        payload: JSON.stringify(batch), muteHttpExceptions: true
+      });
+      if (res.getResponseCode() >= 400) {
+        Logger.log('Insert lỗi: ' + res.getContentText());
+      }
+    }
+
+    // Trigger Supabase Realtime → dashboard tự cập nhật
+    UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/sync_log', {
+      method: 'post', headers: headers,
+      payload: JSON.stringify({ rows_count: rows.length }), muteHttpExceptions: true
+    });
+
+    Logger.log('✅ Synced ' + rows.length + ' rows → Supabase');
 
   } catch (err) {
-    Logger.log('Sync lỗi: ' + err.message);
+    Logger.log('❌ Sync lỗi: ' + err.message);
   }
 }
 
-/* ── Cài trigger onChange (chạy 1 lần) ── */
 function setupTrigger() {
   ScriptApp.getProjectTriggers().forEach(function(t) {
     if (t.getHandlerFunction() === 'onSheetChange') ScriptApp.deleteTrigger(t);
   });
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   ScriptApp.newTrigger('onSheetChange').forSpreadsheet(ss).onChange().create();
-  Logger.log('✅ Trigger đã cài. Dashboard cập nhật trong < 2 giây khi Sheet thay đổi.');
+  Logger.log('✅ Trigger đã cài.');
 }
 
-/* ── Sync thủ công để test ── */
-function manualSync() {
-  syncNow();
-}
+function manualSync() { syncNow(); }
