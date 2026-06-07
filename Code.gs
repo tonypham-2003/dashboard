@@ -27,7 +27,7 @@ function syncNow() {
 
     var raw  = sheet.getRange(2, 1, lastRow - 1, 21).getValues();
     var rows = raw
-      .filter(function(r) { return r[0] !== '' && r[0] !== null; })
+      .filter(function(r) { return r[1] !== '' && r[1] !== null && r[1] !== undefined; })
       .map(function(r) {
         var obj = {};
         COLS.forEach(function(col, i) {
