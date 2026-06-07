@@ -19,15 +19,19 @@ module.exports = async function handler(req, res) {
 
   // GET → diagnostic
   if (req.method === 'GET') {
+    const results = { url: SURL || 'MISSING', key: SKEY ? `set(${SKEY.length})` : 'MISSING' };
+    // Test 1: basic internet
+    try { await fetch('https://httpbin.org/get'); results.internet = 'ok'; }
+    catch (e) { results.internet = e.message; }
+    // Test 2: Supabase ping
     try {
-      const t = await fetch(`${SURL}/rest/v1/shipments?select=id&limit=1`, {
-        headers: { apikey: SKEY, Authorization: `Bearer ${SKEY}` },
-        signal: AbortSignal.timeout(6000)
-      });
-      return res.json({ url: SURL ? 'set' : 'MISSING', key: SKEY ? 'set' : 'MISSING', status: t.status, ok: t.ok });
+      const t = await fetch(`${SURL}/rest/v1/`, { headers: { apikey: SKEY } });
+      results.supabase = `HTTP ${t.status}`;
     } catch (e) {
-      return res.json({ url: SURL ? 'set' : 'MISSING', key: SKEY ? 'set' : 'MISSING', error: e.message });
+      results.supabase = e.message;
+      results.cause = e.cause ? String(e.cause) : undefined;
     }
+    return res.json(results);
   }
 
   try {
