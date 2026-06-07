@@ -14,6 +14,22 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  const SURL = process.env.SUPABASE_URL;
+  const SKEY = process.env.SUPABASE_SERVICE_KEY;
+
+  // GET → diagnostic
+  if (req.method === 'GET') {
+    try {
+      const t = await fetch(`${SURL}/rest/v1/shipments?select=id&limit=1`, {
+        headers: { apikey: SKEY, Authorization: `Bearer ${SKEY}` },
+        signal: AbortSignal.timeout(6000)
+      });
+      return res.json({ url: SURL ? 'set' : 'MISSING', key: SKEY ? 'set' : 'MISSING', status: t.status, ok: t.ok });
+    } catch (e) {
+      return res.json({ url: SURL ? 'set' : 'MISSING', key: SKEY ? 'set' : 'MISSING', error: e.message });
+    }
+  }
+
   try {
     let rows = [];
 
@@ -23,16 +39,9 @@ module.exports = async function handler(req, res) {
       if (!Array.isArray(rows) || rows.length === 0) {
         return res.status(400).json({ error: 'rows trống hoặc sai định dạng' });
       }
-    } else {
-      return res.status(200).json({
-        message: 'Sync endpoint hoạt động. Dùng POST từ Apps Script để gửi data.'
-      });
     }
 
-    const supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_KEY
-    );
+    const supabase = createClient(SURL, SKEY);
 
     const { error: delErr } = await supabase.from('shipments').delete().gte('id', 0);
     if (delErr) throw delErr;
