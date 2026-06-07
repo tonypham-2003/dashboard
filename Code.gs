@@ -9,8 +9,8 @@
  *   2. Extensions → Apps Script → Run → setupTrigger
  */
 
-var VERCEL_SYNC_URL = 'https://YOUR-PROJECT.vercel.app/api/sync';
-var SYNC_SECRET     = 'YOUR_SYNC_SECRET';  // phải khớp với Vercel env var
+var VERCEL_SYNC_URL = 'https://dashboard-g568ovtbc-2003phamgiahuy-8957s-projects.vercel.app/api/sync';
+var SYNC_SECRET     = 'tc2026secret';  // phải khớp với Vercel env var
 
 var COLS = [
   'no','po_no','invoice_no','container_no','bl_no','destination_port','plant',
