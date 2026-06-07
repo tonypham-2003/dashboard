@@ -35,10 +35,20 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    // ── Đọc Sheet qua CSV public URL (sheet phải "Anyone with link can view") ──
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Sheet1`;
-    const csvRes = await fetch(csvUrl);
-    if (!csvRes.ok) throw new Error(`Không lấy được Sheet CSV: ${csvRes.status}`);
+    // Thử 2 URL: export trực tiếp (ổn định hơn) rồi fallback sang gviz
+    const urls = [
+      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`,
+      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Sheet1`,
+    ];
+    let csvRes, lastErr;
+    for (const csvUrl of urls) {
+      try {
+        csvRes = await fetch(csvUrl, { signal: AbortSignal.timeout(15000) });
+        if (csvRes.ok) break;
+        lastErr = `HTTP ${csvRes.status} from ${csvUrl}`;
+      } catch (e) { lastErr = `${e.message} (${csvUrl})`; csvRes = null; }
+    }
+    if (!csvRes || !csvRes.ok) throw new Error(`Không lấy được Sheet CSV: ${lastErr}`);
 
     const csvText = await csvRes.text();
     const parsed  = parseCSV(csvText);
