@@ -18,12 +18,7 @@ module.exports = async function handler(req, res) {
     let rows = [];
 
     if (req.method === 'POST') {
-      // Data được push từ Apps Script
       const body = req.body || {};
-      const secret = process.env.SYNC_SECRET || 'tc2026secret';
-      if (body.secret && body.secret !== secret) {
-        return res.status(401).json({ error: 'unauthorized' });
-      }
       rows = body.rows || [];
       if (!Array.isArray(rows) || rows.length === 0) {
         return res.status(400).json({ error: 'rows trống hoặc sai định dạng' });

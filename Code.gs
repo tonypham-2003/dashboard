@@ -19,8 +19,10 @@ function onSheetChange(e) { syncNow(); }
 
 function syncNow() {
   try {
-    var sheet   = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+    var ss      = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet   = ss.getSheets()[0];
     var lastRow = sheet.getLastRow();
+    Logger.log('Sheet: ' + sheet.getName() + ' | lastRow: ' + lastRow + ' | SS: ' + ss.getName());
     if (lastRow < 2) { Logger.log('Sheet trống.'); return; }
 
     var raw  = sheet.getRange(2, 1, lastRow - 1, 21).getValues();
