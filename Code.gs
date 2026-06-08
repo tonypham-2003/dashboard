@@ -18,6 +18,8 @@ var COLS = [
 function onSheetChange(e) { syncNow(); }
 
 function syncNow() {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) { Logger.log('⚠ Sync đang chạy, bỏ qua.'); return; }
   try {
     var ss      = SpreadsheetApp.getActiveSpreadsheet();
     var sheet   = ss.getSheets()[0];
@@ -52,6 +54,8 @@ function syncNow() {
 
   } catch (err) {
     Logger.log('❌ Sync lỗi: ' + err.message);
+  } finally {
+    lock.releaseLock();
   }
 }
 
