@@ -500,46 +500,49 @@ const IFilter  = ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" 
 const IChevron = ()=><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>;
 
 /* KPI filled icons — all use fill:white via .km-ico svg CSS */
-/* Total Containers — solid hexagonal cube silhouette */
-const IBox = ()=><svg viewBox="0 0 24 24">
-  <path d="M12 2L2.5 7.5v9L12 22l9.5-5.5v-9L12 2z"/>
+/* Total Containers — shipping container side-view with ribs */
+const IBox = ()=><svg viewBox="0 0 24 24" fillRule="evenodd">
+  <rect x="2" y="6" width="20" height="13" rx="1.5"/>
+  <rect x="2" y="6" width="20" height="2.5"/>
+  <rect x="7" y="6" width="1.5" height="13"/>
+  <rect x="15.5" y="6" width="1.5" height="13"/>
+  <rect x="10.25" y="11" width="3.5" height="1.5" rx=".75"/>
 </svg>;
 /* At Port — anchor */
 const IAnchor = ()=><svg viewBox="0 0 24 24">
-  <circle cx="12" cy="5" r="3"/>
-  <rect x="11" y="7.5" width="2" height="12" rx="1"/>
-  <rect x="5" y="11" width="14" height="2.5" rx="1.25"/>
-  <path d="M5 20.5l1.2-3.5a8 8 0 0 0 11.6 0L19 20.5H5z"/>
+  <circle cx="12" cy="5.5" r="2.5"/>
+  <rect x="11" y="7.5" width="2" height="11" rx="1"/>
+  <rect x="5.5" y="11" width="13" height="2.5" rx="1.25"/>
+  <path d="M6 20.5l1.5-4a7 7 0 0 0 9 0l1.5 4H6z"/>
 </svg>;
-/* In Transit — truck (filled closed paths) */
+/* In Transit — delivery truck */
 const ITruck = ()=><svg viewBox="0 0 24 24">
   <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9 1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
 </svg>;
-/* Delivered — check circle (evenodd: circle white, checkmark shows background) */
+/* Delivered — checkmark inside circle */
 const ICheckCircle = ()=><svg viewBox="0 0 24 24" fillRule="evenodd">
   <circle cx="12" cy="12" r="10"/>
-  <path d="M6 12l1.5-1.5 3.5 3.5 7-7 1.5 1.5-8.5 8.5L6 12z"/>
+  <path d="M7 14l2-2 2.5 2.5 5.5-5.5 2 2-7.5 7.5L7 14z"/>
 </svg>;
-/* Custom Declarations — document */
+/* Custom Declarations — stamped document */
 const IDoc = ()=><svg viewBox="0 0 24 24">
   <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-5 8v-2h8v2H8zm0-4v-2h8v2H8z"/>
 </svg>;
-/* Customer Complaints — bell */
+/* Customer Complaints — bell notification */
 const IBell = ()=><svg viewBox="0 0 24 24">
   <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
 </svg>;
-/* On-Time Delivery — clock (evenodd: white face, background-colored hands) */
+/* On-Time Delivery — clock face with L-shaped hands cutout */
 const ITime = ()=><svg viewBox="0 0 24 24" fillRule="evenodd">
   <circle cx="12" cy="12" r="10"/>
-  <rect x="11" y="6" width="2" height="7" rx="1"/>
-  <rect x="11" y="11" width="6" height="2" rx="1"/>
+  <path d="M11 7h2v5.5h4.5v2H11V7z"/>
 </svg>;
-/* Declaration Accuracy — shield + check (evenodd: white shield, background-colored check) */
+/* Declaration Accuracy — shield with checkmark cutout */
 const IShield = ()=><svg viewBox="0 0 24 24" fillRule="evenodd">
   <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-  <path d="M6 12l1.5-1.5 3.5 3.5 5.5-5.5 1.5 1.5-7 7L6 12z"/>
+  <path d="M7.5 12.5l1.8-1.8 2.2 2.2 4.2-4.2 1.8 1.8-6 6L7.5 12.5z"/>
 </svg>;
-/* ICheck still needed for nav (stroke context) */
+/* ICheck for notice warning (stroke context) */
 const ICheck = ()=><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>;
 
 function Badge({val}) {
@@ -1140,7 +1143,7 @@ function App() {
             <div className="kpi-panel">
               <div className="kpi-panel-hdr">Container Status</div>
               <div className="kpi-mini">
-                <div className="km-ico g-dark"><IBox/></div>
+                <div className="km-ico g-purple"><IBox/></div>
                 <div className="km-body">
                   <span className="km-lbl">Total Containers</span>
                   <div className="km-vals">
@@ -1150,7 +1153,7 @@ function App() {
                 </div>
               </div>
               <div className="kpi-mini">
-                <div className="km-ico g-orange"><IAnchor/></div>
+                <div className="km-ico g-purple"><IAnchor/></div>
                 <div className="km-body">
                   <span className="km-lbl">At Port</span>
                   <div className="km-vals">
@@ -1160,7 +1163,7 @@ function App() {
                 </div>
               </div>
               <div className="kpi-mini">
-                <div className="km-ico g-blue"><ITruck/></div>
+                <div className="km-ico g-purple"><ITruck/></div>
                 <div className="km-body">
                   <span className="km-lbl">In Transit</span>
                   <div className="km-vals">
@@ -1170,7 +1173,7 @@ function App() {
                 </div>
               </div>
               <div className="kpi-mini">
-                <div className="km-ico g-green"><ICheckCircle/></div>
+                <div className="km-ico g-purple"><ICheckCircle/></div>
                 <div className="km-body">
                   <span className="km-lbl">Delivered</span>
                   <div className="km-vals">
@@ -1185,7 +1188,7 @@ function App() {
             <div className="kpi-panel">
               <div className="kpi-panel-hdr">Performance</div>
               <div className="kpi-mini">
-                <div className="km-ico g-blue"><IDoc/></div>
+                <div className="km-ico g-purple"><IDoc/></div>
                 <div className="km-body">
                   <span className="km-lbl">Custom Declarations</span>
                   <div className="km-vals">
@@ -1195,7 +1198,7 @@ function App() {
                 </div>
               </div>
               <div className="kpi-mini">
-                <div className="km-ico g-red"><IBell/></div>
+                <div className="km-ico g-purple"><IBell/></div>
                 <div className="km-body">
                   <span className="km-lbl">Customer Complaints</span>
                   <div className="km-vals">
@@ -1205,21 +1208,21 @@ function App() {
                 </div>
               </div>
               <div className="kpi-mini">
-                <div className="km-ico" style={{background:kpi.onTimeRate>=80?'linear-gradient(135deg,#3fb950,#238636)':kpi.onTimeRate>=60?'linear-gradient(135deg,#f0883e,#db6d28)':'linear-gradient(135deg,#f85149,#da3633)'}}><ITime/></div>
+                <div className="km-ico g-purple"><ITime/></div>
                 <div className="km-body">
                   <span className="km-lbl">On-Time Delivery</span>
                   <div className="km-vals">
-                    <span className="km-abs">{kpi.onTime}<span style={{fontSize:'.65rem',color:'var(--muted)',fontWeight:400}}>/{kpi.withDates}</span></span>
+                    <span className="km-abs">{kpi.onTime}</span>
                     <span className={`km-pct${kpi.onTimeRate>=80?' up':kpi.onTimeRate>=60?' wa':' dn'}`}>{fmtPct(kpi.onTimeRate)}</span>
                   </div>
                 </div>
               </div>
               <div className="kpi-mini">
-                <div className="km-ico" style={{background:kpi.decAcc>=90?'linear-gradient(135deg,#3fb950,#238636)':kpi.decAcc>=70?'linear-gradient(135deg,#bc8cff,#8957e5)':'linear-gradient(135deg,#f85149,#da3633)'}}><IShield/></div>
+                <div className="km-ico g-purple"><IShield/></div>
                 <div className="km-body">
                   <span className="km-lbl">Declaration Accuracy</span>
                   <div className="km-vals">
-                    <span className="km-abs">{kpi.correct}<span style={{fontSize:'.65rem',color:'var(--muted)',fontWeight:400}}>/{kpi.declarations}</span></span>
+                    <span className="km-abs">{kpi.correct}</span>
                     <span className={`km-pct${kpi.decAcc>=90?' up':kpi.decAcc>=70?' wa':' dn'}`}>{fmtPct(kpi.decAcc)}</span>
                   </div>
                 </div>
