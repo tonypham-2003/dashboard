@@ -5,7 +5,8 @@
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │  GOOGLE SHEETS  (Master file - Report / Sheet1)              │
-│  21 cols A–U · ~2100 rows of shipment data                   │
+│  Col A: empty (row index) · Data cols B–W (22 cols)          │
+│  Row 1: empty · Row 2: headers · Row 3+: ~2100 data rows     │
 └──────────────────┬───────────────────────────────────────────┘
                    │ onChange trigger  OR  doGet() call
                    ▼
@@ -13,8 +14,8 @@
 │  APPS SCRIPT  (Code.gs — container-bound to the Sheet)       │
 │  onSheetChange() → syncNow()     [auto on every edit]        │
 │  doGet()         → syncNow()     [called by Vercel GET]      │
-│  syncNow(): reads Sheet1, filters col B ≠ "",                │
-│             POST { rows:[...] } to Vercel /api/sync          │
+│  syncNow(): getRange(3, 2, lastRow-2, 22) — row3, colB       │
+│             filter r[1] ≠ "" (PO No), POST rows to Vercel    │
 │  Web App: script.google.com/macros/s/AKfycbyzDiMe_...exec   │
 └──────────────────┬───────────────────────────────────────────┘
                    │ POST { rows: [...] }
@@ -78,25 +79,37 @@
 
 ---
 
-## Column Schema (Sheet1, row 2+, 22 columns A–V)
+## Column Schema (Sheet1 — col A empty, data cols B–W, headers row 2, data row 3+)
 
-| Col | Index | JS camelCase | DB snake_case | Notes |
-|-----|-------|-------------|---------------|-------|
-| A | 0 | no | no | Row number — often empty, not used as filter |
-| B | 1 | poNo | po_no | **Filter key** — empty = skip row |
-| C | 2 | invoiceNo | invoice_no | |
-| D | 3 | containerNo | container_no | |
-| E | 4 | blNo | bl_no | |
-| F | 5 | cusDecNo | cus_dec_no | Customs Declaration Number — e.g. `374876972043` |
-| G | 6 | destinationPort | destination_port | Cat Lai / Cai Mep / Da Nang / Hai Phong / Lach Huyen |
-| H | 7 | plant | plant | HCMC / Hanoi / Bac Ninh / Dong Nai / Binh Duong / Da Nang / Hai Phong |
-| I–Q | 8–16 | dates + status | text cols | Format: `HH:mm - DD Mon` |
-| N | 13 | customsLine | customs_line | Green / Yellow / Red |
-| R | 17 | truckPlate | truck_plate | |
-| S | 18 | driverTelephone | driver_telephone | |
-| T | 19 | pickupAtPort | pickup_at_port | Yes / No |
-| U | 20 | deliverToPlant | deliver_to_plant | Yes / No |
-| V | 21 | customerComplaint | customer_complaint | No Complaint / Late Delivery |
+> **CRITICAL**: Sheet col A is empty (row index). Apps Script reads from col 2 (B), row 3.
+> `getRange(3, 2, lastRow-2, 22)` → r[0]=colB … r[21]=colW
+> Filter: `r[1] !== ''` checks PO No (col C = r[1])
+
+| Sheet Col | r[i] | JS camelCase | DB snake_case | Notes |
+|-----------|-------|-------------|---------------|-------|
+| A | — | — | — | **Empty** — row index, not read |
+| B | 0 | no | no | Row number |
+| C | 1 | poNo | po_no | **Filter key** — empty = skip row |
+| D | 2 | invoiceNo | invoice_no | |
+| E | 3 | containerNo | container_no | |
+| F | 4 | blNo | bl_no | |
+| G | 5 | cusDecNo | cus_dec_no | Customs Declaration Number e.g. `374876972043` |
+| H | 6 | destinationPort | destination_port | Cat Lai / Cai Mep / Da Nang / Hai Phong / Lach Huyen |
+| I | 7 | plant | plant | HCMC / Hanoi / Bac Ninh / Dong Nai / Binh Duong |
+| J | 8 | docRecDate | doc_rec_date | Format: `HH:mm - DD Mon` |
+| K | 9 | eta | eta | |
+| L | 10 | ata | ata | |
+| M | 11 | cusDecDate | cus_dec_date | |
+| N | 12 | declarationStatus | declaration_status | Correct / Incorrect |
+| O | 13 | customsLine | customs_line | Green / Yellow / Red |
+| P | 14 | taxPayDate | tax_pay_date | |
+| Q | 15 | completedCusInspection | completed_cus_inspection | |
+| R | 16 | customsClearanceDate | customs_clearance_date | |
+| S | 17 | truckPlate | truck_plate | |
+| T | 18 | driverTelephone | driver_telephone | |
+| U | 19 | pickupAtPort | pickup_at_port | Yes / No |
+| V | 20 | deliverToPlant | deliver_to_plant | Yes / No |
+| W | 21 | customerComplaint | customer_complaint | No Complaint / Late Delivery |
 
 ---
 
@@ -113,15 +126,25 @@ git push origin main        # Vercel auto-deploys
 ### Change UI / KPIs / charts
 Edit `index.html` only. No build step — React runs via Babel CDN in browser.
 
+### Add a new column to the Sheet
+1. Insert column in Sheet at desired position
+2. Update `COLS` array in `Code.gs` (22 entries, 0-based from col B)
+3. Update `COLS` array in `api/sync.js` (same order)
+4. Update `FIELDS` array + `mapSupabaseRow()` in `index.html`
+5. Run in Supabase SQL Editor: `ALTER TABLE shipments ADD COLUMN IF NOT EXISTS <col> TEXT;`
+6. Paste new `Code.gs` into Apps Script → Save → Run `manualSync()`
+7. Redeploy Apps Script web app (Manage deployments → New version)
+8. `git add` all changed files → commit → push
+
 ### Change sync column logic
-Edit `Code.gs` → `syncNow()` function → the `.filter()` line (currently filters `r[1] !== ''`).
-After editing: paste updated code into Apps Script editor → redeploy web app.
+Edit `Code.gs` → `syncNow()` → `getRange(3, 2, lastRow-2, 22)` reads from row 3, col B.
+After editing: paste updated code into Apps Script editor → Save → redeploy web app.
 
 ### Test sync manually
 ```
-# Trigger via browser or curl:
+# Trigger via browser:
 GET https://dashboard-red-mu-51.vercel.app/api/sync
-→ Returns {"triggered":true} and Apps Script syncs in background
+→ Returns {"triggered":true}, Apps Script syncs in background
 
 # Or run directly in Apps Script editor:
 manualSync()
@@ -129,18 +152,20 @@ manualSync()
 
 ### If dashboard shows 0 / no data
 1. Run `manualSync()` in Apps Script — check log for `✅ Thành công`
-2. Verify Supabase → Table Editor → shipments table has rows
-3. Verify Vercel env vars set correctly for **Production** environment
+2. Verify Supabase → Table Editor → shipments has rows with correct column values
+3. If columns look shifted: check `getRange(3, 2, ...)` — must start row 3, col 2
+4. Verify Vercel env vars set correctly for **Production** environment
 
 ### If Sync Sheet button stops working
-Check Apps Script web app is still deployed: open the web app URL in browser → should return `{"ok":true}`.
-If expired, redeploy: Apps Script → Deploy → Manage deployments → Edit → New version → Deploy.
+Open Apps Script web app URL in browser → should return `{"ok":true}`.
+If expired: Apps Script → Deploy → Manage deployments → Edit → New version → Deploy.
 
 ### If auto-sync stops (sheet edits don't update dashboard)
 Run `setupTrigger()` in Apps Script to reinstall the onChange trigger.
+Then redeploy web app so doGet() uses latest code.
 
 ### Add env var to Vercel
-Vercel → project → Settings → Environment Variables → tick **Production** checkbox → Save → **Redeploy**.
+Vercel → project → Settings → Environment Variables → tick **Production** → Save → **Redeploy**.
 Env vars are case-sensitive. Redeploy required after any change.
 
 ---
@@ -149,9 +174,11 @@ Env vars are case-sensitive. Redeploy required after any change.
 
 | Constraint | Reason |
 |-----------|--------|
+| Sheet col A is empty — read from col 2 (B) | Col A is a row-index column, not data |
+| Data starts at row 3, not row 2 | Row 2 = headers; `getRange(3, 2, lastRow-2, 22)` |
 | Vercel cannot fetch from `docs.google.com` | Google blocks cloud provider IPs |
-| Apps Script cannot reach Supabase directly | DNS failure from Google's network |
-| Service role key must never be in committed code | Security — goes in Vercel env vars only |
+| Apps Script cannot reach Supabase directly | DNS ENOTFOUND from Google's network |
+| Service role key must never be in committed code | Security — Vercel env vars only |
 | Vercel env var names are case-sensitive | `SUPABASE_URL` ≠ `supabase_url` |
 | Must redeploy after env var changes | Vercel caches env at build time |
 | After editing Apps Script, must redeploy web app | New version required for doGet changes |
