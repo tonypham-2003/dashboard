@@ -541,19 +541,16 @@ function BarAcc({data}) {
       labels:data.map(d=>d.label),
       datasets:[
         {
-          type:'bar',label:'Correct',order:2,
+          label:'Correct',
           data:data.map(d=>d.total>0?d.correct:null),
-          backgroundColor:'rgba(88,166,255,.65)',hoverBackgroundColor:'rgba(88,166,255,.85)',
-          borderRadius:5,borderSkipped:false,
+          backgroundColor:'rgba(88,166,255,.75)',hoverBackgroundColor:'rgba(88,166,255,.95)',
+          borderRadius:4,borderSkipped:false,
         },
         {
-          type:'line',label:'Target (95%)',order:1,
+          label:'Target (95%)',
           data:data.map(d=>d.total>0?d.target:null),
-          borderColor:'#f0883e',backgroundColor:'transparent',
-          borderWidth:2,borderDash:[6,4],
-          pointRadius:4,pointBackgroundColor:'#f0883e',
-          pointBorderColor:'rgba(13,17,23,.8)',pointBorderWidth:1.5,
-          fill:false,tension:0,spanGaps:false,
+          backgroundColor:'rgba(240,136,62,.55)',hoverBackgroundColor:'rgba(240,136,62,.8)',
+          borderRadius:4,borderSkipped:false,
         }
       ]
     },
@@ -568,6 +565,7 @@ function BarAcc({data}) {
         },
         tooltip:{
           ...CDEFS.plugins.tooltip,
+          mode:'index',intersect:false,
           callbacks:{
             label:ctx=>{
               const d=data[ctx.dataIndex];
