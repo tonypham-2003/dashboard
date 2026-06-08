@@ -103,15 +103,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--dark);display:flex
 .content{padding:1.5rem;flex:1}
 
 /* ── KPI GRID ────────────────────────────── */
-.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-bottom:1.5rem;padding-top:1.75rem}
-.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:1rem 1.25rem 1.1rem;display:flex;align-items:flex-start;justify-content:space-between;position:relative;transition:border-color .2s}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:1.5rem;padding-top:1.35rem}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:.8rem;box-shadow:var(--shadow);padding:.7rem .95rem .8rem;display:flex;align-items:flex-start;justify-content:space-between;position:relative;transition:border-color .2s}
 .kpi-card:hover{border-color:rgba(88,166,255,.25)}
-.kpi-ico{width:3.5rem;height:3.5rem;border-radius:.75rem;display:flex;align-items:center;justify-content:center;margin-top:-1.75rem;flex-shrink:0;box-shadow:0 4px 20px rgba(0,0,0,.35),0 7px 10px -5px rgba(0,0,0,.5)}
-.kpi-ico svg{width:1.4rem;height:1.4rem;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.kpi-body{flex:1;padding-left:1rem;min-width:0}
-.kpi-lbl{font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem}
-.kpi-val{font-size:1.6rem;font-weight:700;color:var(--dark);line-height:1.1}
-.kpi-sub{font-size:.73rem;color:var(--muted);margin-top:.3rem}
+.kpi-ico{width:2.8rem;height:2.8rem;border-radius:.55rem;display:flex;align-items:center;justify-content:center;margin-top:-1.35rem;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.3),0 5px 8px -4px rgba(0,0,0,.4)}
+.kpi-ico svg{width:1.15rem;height:1.15rem;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.kpi-body{flex:1;padding-left:.8rem;min-width:0}
+.kpi-lbl{font-size:.62rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem}
+.kpi-val{font-size:1.35rem;font-weight:700;color:var(--dark);line-height:1.1}
+.kpi-sub{font-size:.68rem;color:var(--muted);margin-top:.25rem}
 .kpi-sub .up{color:#10b981}.kpi-sub .dn{color:#f85149}.kpi-sub .wa{color:#e3b341}
 .g-dark{background:linear-gradient(135deg,#30363d,#21262d)}
 .g-blue{background:linear-gradient(135deg,#388bfd,#1A73E8)}
@@ -183,6 +183,7 @@ tr:hover td{background:rgba(255,255,255,.03)}
 @keyframes slideUp{from{transform:translateY(.75rem);opacity:0}to{transform:translateY(0);opacity:1}}
 
 /* ── RESPONSIVE ──────────────────────────── */
+@media(max-width:1300px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.cr2{grid-template-columns:1fr}}
 @media(max-width:768px){.sidebar{display:none}.main{margin-left:0}.kpi-grid{grid-template-columns:1fr}}
 
@@ -213,7 +214,7 @@ const MO_MAP = Object.fromEntries(MONTHS.map((m,i)=>[m,i]));
 
 /* ─── TIME FILTER ────────────────────────── */
 const PERIOD_LABELS = {
-  all:'Tất Cả', q1:'Q1', q2:'Q2', q3:'Q3', q4:'Q4', h1:'H1 2026', h2:'H2 2026'
+  all:'All', q1:'Q1', q2:'Q2', q3:'Q3', q4:'Q4', h1:'H1 2026', h2:'H2 2026'
 };
 function filterByPeriod(ships, period) {
   if (period === 'all') return ships;
@@ -273,32 +274,37 @@ function fmtPct(v) { return v==null ? '—' : v.toFixed(1)+'%'; }
 
 /* ─── KPI CALC ───────────────────────────── */
 function calcKPIs(ships) {
-  const total        = ships.length;
-  const atPort       = ships.filter(s=>s.ata&&s.pickupAtPort==='No').length;
-  const inTransit    = ships.filter(s=>s.pickupAtPort==='Yes'&&s.deliverToPlant==='No').length;
-  const delivered    = ships.filter(s=>s.deliverToPlant==='Yes').length;
-  const declarations = ships.filter(s=>s.cusDecDate).length;
-  const cleared      = ships.filter(s=>s.customsClearanceDate).length;
-  const green        = ships.filter(s=>s.customsLine==='Green').length;
-  const yellow       = ships.filter(s=>s.customsLine==='Yellow').length;
-  const red          = ships.filter(s=>s.customsLine==='Red').length;
-  const correct      = ships.filter(s=>s.declarationStatus==='Correct').length;
-  const incorrect    = ships.filter(s=>s.declarationStatus==='Incorrect').length;
-  const decAcc       = declarations>0 ? (correct/declarations*100) : 0;
-  const complaints   = ships.filter(s=>s.customerComplaint&&s.customerComplaint!=='No Complaint').length;
-  const withDates    = ships.filter(s=>s.eta&&s.ata);
-  const onTime       = withDates.filter(s=>{
+  // Total containers = count of non-empty containerNo
+  const totalContainers = ships.filter(s=>s.containerNo).length;
+  // Containers at port = containerNo rows where pickupAtPort = No
+  const atPort          = ships.filter(s=>s.containerNo&&s.pickupAtPort==='No').length;
+  // In transit (for sub-label)
+  const inTransit       = ships.filter(s=>s.containerNo&&s.pickupAtPort==='Yes'&&s.deliverToPlant==='No').length;
+  // Delivered = pickupAtPort=Yes AND deliverToPlant=Yes
+  const delivered       = ships.filter(s=>s.containerNo&&s.pickupAtPort==='Yes'&&s.deliverToPlant==='Yes').length;
+  // Declarations = count of non-empty cusDecNo
+  const declarations    = ships.filter(s=>s.cusDecNo).length;
+  // Correct / Incorrect among those with a cusDecNo
+  const correct         = ships.filter(s=>s.cusDecNo&&s.declarationStatus==='Correct').length;
+  const incorrect       = ships.filter(s=>s.cusDecNo&&s.declarationStatus==='Incorrect').length;
+  const decAcc          = declarations>0 ? (correct/declarations*100) : 0;
+  // Complaints = customerComplaint exists and is not "No Complaint"
+  const complaints      = ships.filter(s=>s.customerComplaint&&s.customerComplaint!=='No Complaint').length;
+  // On-time = ATA <= ETA (date only)
+  const withDates       = ships.filter(s=>s.eta&&s.ata);
+  const onTime          = withDates.filter(s=>{
     const e=dateOnly(parseDate(s.eta)),a=dateOnly(parseDate(s.ata));
     return e&&a&&a<=e;
   }).length;
   const onTimeRate = withDates.length>0 ? (onTime/withDates.length*100) : 0;
-  const ctimes = ships.filter(s=>s.ata&&s.customsClearanceDate)
-    .map(s=>daysBetween(dateOnly(parseDate(s.ata)),dateOnly(parseDate(s.customsClearanceDate))))
-    .filter(v=>v!=null&&v>=0);
-  const avgClear = ctimes.length>0 ? ctimes.reduce((a,b)=>a+b,0)/ctimes.length : null;
-  return { total,atPort,inTransit,delivered,declarations,cleared,green,yellow,red,
-           correct,incorrect,decAcc,complaints,onTimeRate,onTime,
-           withDates:withDates.length,avgClear };
+  // Customs lines (for charts)
+  const green   = ships.filter(s=>s.customsLine==='Green').length;
+  const yellow  = ships.filter(s=>s.customsLine==='Yellow').length;
+  const red     = ships.filter(s=>s.customsLine==='Red').length;
+  const cleared = ships.filter(s=>s.customsClearanceDate).length;
+  return { totalContainers,atPort,inTransit,delivered,declarations,correct,incorrect,
+           decAcc,complaints,onTimeRate,onTime,withDates:withDates.length,
+           green,yellow,red,cleared };
 }
 
 /* ─── CHART DATA ─────────────────────────── */
@@ -399,7 +405,7 @@ function KpiCard({label,value,sub,gradient,icon:Icon}) {
 
 function LivePulse({busy}) {
   return busy
-    ? <span style={{fontSize:'.7rem',color:'var(--muted)'}}>Đang cập nhật…</span>
+    ? <span style={{fontSize:'.7rem',color:'var(--muted)'}}>Updating…</span>
     : <span style={{display:'flex',alignItems:'center',gap:'.3rem',fontSize:'.7rem',color:'#10b981',fontWeight:600}}>
         <span style={{width:'.45rem',height:'.45rem',borderRadius:'50%',background:'#10b981',display:'inline-block',animation:'pulse 1.5s infinite'}}/>
         Realtime
@@ -411,7 +417,7 @@ function DonutChannels({g,y,r}) {
   const total=g+y+r;
   const cfg={
     type:'doughnut',
-    data:{labels:['Luồng Xanh','Luồng Vàng','Luồng Đỏ'],
+    data:{labels:['Green Channel','Yellow Channel','Red Channel'],
       datasets:[{data:[g,y,r],backgroundColor:['#3fb950','#e3b341','#f85149'],borderWidth:0,hoverOffset:4}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'72%',
       plugins:{legend:{display:false},
@@ -422,7 +428,7 @@ function DonutChannels({g,y,r}) {
     <div>
       <div style={{height:180,position:'relative'}}><ChartEl config={cfg} height={180}/></div>
       <div className="donut-legend">
-        {[['Luồng Xanh','#3fb950',g],['Luồng Vàng','#e3b341',y],['Luồng Đỏ','#f85149',r]].map(([lb,col,n])=>(
+        {[['Green Channel','#3fb950',g],['Yellow Channel','#e3b341',y],['Red Channel','#f85149',r]].map(([lb,col,n])=>(
           <div className="dl-item" key={lb}>
             <div className="dl-lbl"><span className="dl-dot" style={{background:col}}/>{lb}</div>
             <div><span className="dl-val">{n}</span><span style={{color:'var(--muted)',marginLeft:'.3rem',fontSize:'.72rem'}}>({total?((n/total)*100).toFixed(1):0}%)</span></div>
@@ -434,13 +440,13 @@ function DonutChannels({g,y,r}) {
 }
 
 function LineAcc({data}) {
-  const cfg={type:'line',data:{labels:data.map(d=>d.label),datasets:[{label:'Chính xác (%)',data:data.map(d=>d.rate),borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.08)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#58a6ff',fill:true,tension:.4,spanGaps:false}]},
+  const cfg={type:'line',data:{labels:data.map(d=>d.label),datasets:[{label:'Accuracy (%)',data:data.map(d=>d.rate),borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.08)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#58a6ff',fill:true,tension:.4,spanGaps:false}]},
     options:{...CDEFS,plugins:{...CDEFS.plugins,tooltip:{...CDEFS.plugins.tooltip,callbacks:{label:ctx=>` ${ctx.parsed.y?.toFixed(1)}%`}}},
       scales:{...CDEFS.scales,y:{...CDEFS.scales.y,min:0,max:100,ticks:{...CDEFS.scales.y.ticks,callback:v=>`${v}%`}}}}};
   return <ChartEl config={cfg} height={220}/>;
 }
 function LineOT({data}) {
-  const cfg={type:'line',data:{labels:data.map(d=>d.label),datasets:[{label:'Đúng hạn (%)',data:data.map(d=>d.rate),borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,.08)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#3fb950',fill:true,tension:.4,spanGaps:false}]},
+  const cfg={type:'line',data:{labels:data.map(d=>d.label),datasets:[{label:'On-Time (%)',data:data.map(d=>d.rate),borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,.08)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#3fb950',fill:true,tension:.4,spanGaps:false}]},
     options:{...CDEFS,plugins:{...CDEFS.plugins,tooltip:{...CDEFS.plugins.tooltip,callbacks:{label:ctx=>` ${ctx.parsed.y?.toFixed(1)}%`}}},
       scales:{...CDEFS.scales,y:{...CDEFS.scales.y,min:0,max:100,ticks:{...CDEFS.scales.y.ticks,callback:v=>`${v}%`}}}}};
   return <ChartEl config={cfg} height={220}/>;
@@ -485,18 +491,18 @@ function Table({ships}) {
   return (
     <div className="tbl-card">
       <div className="tbl-hdr">
-        <div className="tbl-title">Danh Sách Lô Hàng <span>({rows.length} / {ships.length})</span></div>
+        <div className="tbl-title">Shipment List <span>({rows.length} / {ships.length})</span></div>
         <div className="filters">
           <input className="finput" placeholder="🔍 PO / Container / BL…" value={q} onChange={e=>setQ(e.target.value)}/>
           <select className="fsel" value={pf} onChange={e=>setPf(e.target.value)}>
-            <option value="">Tất cả cảng</option>{ports.map(p=><option key={p}>{p}</option>)}
+            <option value="">All ports</option>{ports.map(p=><option key={p}>{p}</option>)}
           </select>
           <select className="fsel" value={lf} onChange={e=>setLf(e.target.value)}>
-            <option value="">Tất cả luồng</option>
+            <option value="">All channels</option>
             <option>Green</option><option>Yellow</option><option>Red</option>
           </select>
           <select className="fsel" value={df} onChange={e=>setDf(e.target.value)}>
-            <option value="">Tất cả tờ khai</option>
+            <option value="">All declarations</option>
             <option>Correct</option><option>Incorrect</option>
           </select>
         </div>
@@ -505,13 +511,13 @@ function Table({ships}) {
         <table>
           <thead><tr>
             <th>#</th><th>PO No</th><th>Container No</th><th>BL No</th><th>Cus Dec No</th>
-            <th>Cảng</th><th>Nhà Máy</th><th>ETA</th><th>ATA</th>
-            <th>Tờ Khai</th><th>Luồng</th><th>Thông Quan</th>
-            <th>Lấy Cont</th><th>Giao NM</th><th>Phản Ánh</th>
+            <th>Port</th><th>Plant</th><th>ETA</th><th>ATA</th>
+            <th>Declaration</th><th>Channel</th><th>Clearance Date</th>
+            <th>Picked Up</th><th>Delivered</th><th>Complaint</th>
           </tr></thead>
           <tbody>
             {slice.length===0
-              ? <tr><td colSpan={15} style={{textAlign:'center',color:'var(--muted)',padding:'2rem'}}>Không có dữ liệu phù hợp</td></tr>
+              ? <tr><td colSpan={15} style={{textAlign:'center',color:'var(--muted)',padding:'2rem'}}>No matching records</td></tr>
               : slice.map(s=>{
                 const late=(()=>{const e=parseDate(s.eta),a=parseDate(s.ata);return e&&a&&dateOnly(a)>dateOnly(e);})();
                 return(
@@ -541,7 +547,7 @@ function Table({ships}) {
         </table>
       </div>
       <div className="tbl-foot">
-        <span>Trang {p} / {tp} · {rows.length} bản ghi</span>
+        <span>Page {p} / {tp} · {rows.length} records</span>
         <div className="pager">
           <button className="pbtn" onClick={()=>go(1)} disabled={p===1}>«</button>
           <button className="pbtn" onClick={()=>go(p-1)} disabled={p===1}>‹</button>
@@ -573,7 +579,7 @@ function SyncButton({onDone}) {
     try {
       const r = await fetch(SYNC_URL);
       const j = await r.json();
-      setMsg(r.ok ? `✅ ${j.rows} dòng` : `❌ ${j.error}`);
+      setMsg(r.ok ? `✅ ${j.rows} rows` : `❌ ${j.error}`);
       if(r.ok && onDone) onDone();
     } catch(e) { setMsg('❌ ' + e.message); }
     finally { setSyncing(false); setTimeout(()=>setMsg(null),3000); }
@@ -587,7 +593,7 @@ function SyncButton({onDone}) {
           border:`1px solid ${syncing?'var(--border)':'rgba(63,185,80,.3)'}`,
           borderRadius:'.5rem',padding:'.4rem .85rem',fontSize:'.78rem',fontWeight:600,
           cursor:syncing?'default':'pointer',fontFamily:'var(--font)'}}>
-        {syncing?'Đang sync…':'⟳ Làm mới Sheet'}
+        {syncing?'Syncing…':'⟳ Sync Sheet'}
       </button>
       {msg&&<span style={{fontSize:'.72rem',fontWeight:600,color:msg.startsWith('✅')?'#3fb950':'#f85149'}}>{msg}</span>}
     </div>
@@ -601,10 +607,10 @@ function LoadingScreen() {
   return(
     <div className="loading">
       <div className="spinner"/>
-      <div style={{fontSize:'.85rem',color:'var(--muted)'}}>Đang kết nối Supabase…</div>
+      <div style={{fontSize:'.85rem',color:'var(--muted)'}}>Connecting to Supabase…</div>
       {secs>=5&&(
         <div style={{marginTop:'.75rem',background:'rgba(227,179,65,.08)',border:'1px solid rgba(227,179,65,.2)',borderRadius:'.6rem',padding:'.65rem 1.1rem',fontSize:'.78rem',color:'#e3b341',maxWidth:400,textAlign:'center'}}>
-          ⏳ Đang chờ {secs}s… Vui lòng đợi thêm {Math.max(0,10-secs)}s.
+          ⏳ Waiting {secs}s… Please wait {Math.max(0,10-secs)} more seconds.
         </div>
       )}
     </div>
@@ -631,7 +637,7 @@ function App() {
       setShips(mapped);
       setLu(new Date().toISOString());
       setLoading(false); setBusy(false); setErr(null);
-      if(silent) setToast('Dữ liệu vừa được cập nhật!');
+      if(silent) setToast('Data has been updated!');
     } catch(e) {
       if(!silent) setErr(e.message);
       setLoading(false); setBusy(false);
@@ -657,9 +663,9 @@ function App() {
     return(
       <div className="loading">
         <div className="err-box" style={{maxWidth:520}}>
-          <b>⚠ Không kết nối được Supabase</b>
+          <b>⚠ Could not connect to Supabase</b>
           <code>{err}</code>
-          <button onClick={()=>fetchData(false)}>↺ Thử lại</button>
+          <button onClick={()=>fetchData(false)}>↺ Retry</button>
         </div>
       </div>
     );
@@ -682,12 +688,12 @@ function App() {
         </div>
         <div className="nav-sec">Menu</div>
         <div className="nav-link active"><IDash/><span>Dashboard</span></div>
-        <div className="nav-link"><IDoc/><span>Tờ Khai</span></div>
-        <div className="nav-link"><ITruck/><span>Vận Chuyển</span></div>
+        <div className="nav-link"><IDoc/><span>Declarations</span></div>
+        <div className="nav-link"><ITruck/><span>Shipments</span></div>
         <div className="sb-foot">
           <div className="sb-status">
             <div className="dot" style={{background:busy?'#e3b341':'#3fb950'}}/>
-            <span>{busy?'Đang cập nhật…':'Live · '+(lu?new Date(lu).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'-')}</span>
+            <span>{busy?'Updating…':'Live · '+(lu?new Date(lu).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'-')}</span>
           </div>
         </div>
       </aside>
@@ -699,13 +705,13 @@ function App() {
 
         {/* TOPBAR */}
         <div className="topbar">
-          <div className="breadcrumb"><span>Trang chủ / </span><b>Dashboard Tổng Quan</b></div>
+          <div className="breadcrumb"><span>Home / </span><b>Overview Dashboard</b></div>
           <div className="topbar-r">
             <div className="live-badge"><span className="live-dot"/>LIVE</div>
-            {lu&&<span className="last-upd">Cập nhật {new Date(lu).toLocaleTimeString('vi-VN')}</span>}
+            {lu&&<span className="last-upd">Updated {new Date(lu).toLocaleTimeString('en-GB')}</span>}
             <LivePulse busy={busy}/>
             <button className={`btn-refresh${busy?' spin':''}`} onClick={()=>fetchData(false)} disabled={busy}>
-              <IRefresh/>{busy?'Đang tải…':'Làm mới'}
+              <IRefresh/>{busy?'Loading…':'Refresh'}
             </button>
             <SyncButton onDone={()=>fetchData(true)}/>
           </div>
@@ -713,46 +719,49 @@ function App() {
 
         {/* TIME FILTER BAR */}
         <div className="filter-bar">
-          <span className="fbar-label"><IFilter style={{width:'.7rem',height:'.7rem',marginRight:'.3rem',verticalAlign:'middle'}}/>Kỳ</span>
+          <span className="fbar-label"><IFilter style={{width:'.7rem',height:'.7rem',marginRight:'.3rem',verticalAlign:'middle'}}/>Period</span>
           {Object.entries(PERIOD_LABELS).map(([k,v],i,arr)=>(
             <React.Fragment key={k}>
               {(k==='h1') && <span className="fbar-sep"/>}
               <button className={`fbar-btn${period===k?' active':''}`} onClick={()=>setPeriod(k)}>{v}</button>
             </React.Fragment>
           ))}
-          <span className="fbar-count"><b>{filteredShips.length}</b> / {ships.length} lô hàng{period!=='all'&&` · ${PERIOD_LABELS[period]}`}</span>
+          <span className="fbar-count"><b>{filteredShips.length}</b> / {ships.length} shipments{period!=='all'&&` · ${PERIOD_LABELS[period]}`}</span>
         </div>
 
         <div className="content">
-          {err&&<div className="notice"><IWarn/><span>Cảnh báo: {err}</span></div>}
+          {err&&<div className="notice"><IWarn/><span>Warning: {err}</span></div>}
 
           {/* KPI CARDS */}
           <div className="kpi-grid">
-            <KpiCard label="Tổng Container" value={kpi.total}
-              sub={`<span class="up">↑ ${kpi.cleared} đã thông quan</span>`} gradient="g-dark" icon={IBox}/>
-            <KpiCard label="Container Tại Cảng" value={kpi.atPort}
-              sub={`Chưa lấy cont · <b>${kpi.inTransit}</b> đang vận chuyển`} gradient="g-orange" icon={IShip}/>
-            <KpiCard label="Container Đã Giao NM" value={kpi.delivered}
-              sub={`<span class="up">${kpi.total?(kpi.delivered/kpi.total*100).toFixed(1):0}%</span> tổng lô hàng`} gradient="g-green" icon={ITruck}/>
-            <KpiCard label="Số Lượng Tờ Khai" value={kpi.declarations}
-              sub={`<span class="up">${kpi.correct} chính xác</span> · <span class="dn">${kpi.incorrect} sai</span>`} gradient="g-blue" icon={IDoc}/>
-            <KpiCard label="Tỉ Lệ Chính Xác TK" value={fmtPct(kpi.decAcc)}
-              sub={`Luồng đỏ: <b class="dn">${kpi.red}</b> · <span class="wa">Vàng: ${kpi.yellow}</span> · <span class="up">Xanh: ${kpi.green}</span>`} gradient="g-purple" icon={ICheck}/>
-            <KpiCard label="Tỉ Lệ Giao Đúng Hạn" value={fmtPct(kpi.onTimeRate)}
-              sub={`${kpi.onTime}/${kpi.withDates} lô · Phản ánh: <span class="dn">${kpi.complaints}</span>`}
-              gradient={kpi.onTimeRate>=80?'g-green':'g-red'} icon={ITime}/>
+            <KpiCard label="Total Containers" value={kpi.totalContainers}
+              sub={`${kpi.inTransit} in transit · ${kpi.delivered} delivered`} gradient="g-dark" icon={IBox}/>
+            <KpiCard label="Containers at Port" value={kpi.atPort}
+              sub={`Awaiting pickup · <b>${kpi.inTransit}</b> in transit`} gradient="g-orange" icon={IShip}/>
+            <KpiCard label="Custom Declarations" value={kpi.declarations}
+              sub={`<span class="up">${kpi.correct} correct</span> · <span class="dn">${kpi.incorrect} incorrect</span>`} gradient="g-blue" icon={IDoc}/>
+            <KpiCard label="Customer Complaints" value={kpi.complaints}
+              sub={`Of ${kpi.totalContainers} total containers`} gradient="g-red" icon={IWarn}/>
+            <KpiCard label="On-Time Delivery" value={fmtPct(kpi.onTimeRate)}
+              sub={`${kpi.onTime} / ${kpi.withDates} containers on time`}
+              gradient={kpi.onTimeRate>=80?'g-green':'g-orange'} icon={ITime}/>
+            <KpiCard label="Declaration Accuracy" value={fmtPct(kpi.decAcc)}
+              sub={`${kpi.correct} correct / ${kpi.declarations} total`}
+              gradient={kpi.decAcc>=90?'g-green':'g-purple'} icon={ICheck}/>
+            <KpiCard label="Delivered Containers" value={kpi.delivered}
+              sub={`<span class="up">${kpi.totalContainers?(kpi.delivered/kpi.totalContainers*100).toFixed(1):0}%</span> of total containers`} gradient="g-green" icon={ITruck}/>
           </div>
 
           {/* CHARTS ROW 1 */}
           <div className="charts-row cr2">
             <div className="chart-card">
-              <div className="cc-hdr"><div className="cc-title">Tỉ Lệ Chính Xác Tờ Khai Theo Tháng</div>
-                <div className="cc-sub">Ngày khai báo (Cus Dec Date) · Tổng: {fmtPct(kpi.decAcc)}</div></div>
+              <div className="cc-hdr"><div className="cc-title">Declaration Accuracy by Month</div>
+                <div className="cc-sub">By Cus Dec Date · Overall: {fmtPct(kpi.decAcc)}</div></div>
               <div className="cw"><LineAcc data={accMo}/></div>
             </div>
             <div className="chart-card">
-              <div className="cc-hdr"><div className="cc-title">Tỷ Lệ Luồng Tờ Khai</div>
-                <div className="cc-sub">Phân bổ luồng hải quan</div></div>
+              <div className="cc-hdr"><div className="cc-title">Customs Channel Distribution</div>
+                <div className="cc-sub">Customs line breakdown</div></div>
               <DonutChannels g={kpi.green} y={kpi.yellow} r={kpi.red}/>
             </div>
           </div>
@@ -760,13 +769,13 @@ function App() {
           {/* CHARTS ROW 2 */}
           <div className="charts-row cr2">
             <div className="chart-card">
-              <div className="cc-hdr"><div className="cc-title">Tỉ Lệ Giao Hàng Đúng Hạn Theo Tháng</div>
-                <div className="cc-sub">ATA ≤ ETA · Tổng: {fmtPct(kpi.onTimeRate)}</div></div>
+              <div className="cc-hdr"><div className="cc-title">On-Time Delivery by Month</div>
+                <div className="cc-sub">ATA ≤ ETA · Overall: {fmtPct(kpi.onTimeRate)}</div></div>
               <div className="cw"><LineOT data={otMo}/></div>
             </div>
             <div className="chart-card">
-              <div className="cc-hdr"><div className="cc-title">Container Theo Cảng Đến</div>
-                <div className="cc-sub">Số lượng theo điểm đến</div></div>
+              <div className="cc-hdr"><div className="cc-title">Containers by Destination Port</div>
+                <div className="cc-sub">Volume by destination</div></div>
               <div className="cw-sm"><BarH data={portD}/></div>
             </div>
           </div>
@@ -774,13 +783,13 @@ function App() {
           {/* CHARTS ROW 3 */}
           <div className="charts-row cr2">
             <div className="chart-card">
-              <div className="cc-hdr"><div className="cc-title">Khối Lượng Container Theo Tháng</div>
-                <div className="cc-sub">Dựa trên ETA</div></div>
+              <div className="cc-hdr"><div className="cc-title">Container Volume by Month</div>
+                <div className="cc-sub">Based on ETA</div></div>
               <div className="cw"><BarVol data={volMo}/></div>
             </div>
             <div className="chart-card">
-              <div className="cc-hdr"><div className="cc-title">Container Theo Nhà Máy</div>
-                <div className="cc-sub">Phân bổ điểm giao hàng</div></div>
+              <div className="cc-hdr"><div className="cc-title">Containers by Plant</div>
+                <div className="cc-sub">Delivery point breakdown</div></div>
               <div className="cw-sm"><BarH data={plantD}/></div>
             </div>
           </div>
