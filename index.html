@@ -102,18 +102,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--dark);display:flex
 /* ── CONTENT ─────────────────────────────── */
 .content{padding:1.5rem;flex:1}
 
-/* ── KPI GRID ────────────────────────────── */
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:1.5rem;padding-top:1.35rem}
-.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:.8rem;box-shadow:var(--shadow);padding:.7rem .95rem .8rem;display:flex;align-items:flex-start;justify-content:space-between;position:relative;transition:border-color .2s}
-.kpi-card:hover{border-color:rgba(88,166,255,.25)}
-.kpi-ico{width:2.8rem;height:2.8rem;border-radius:.55rem;display:flex;align-items:center;justify-content:center;margin-top:-1.35rem;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.3),0 5px 8px -4px rgba(0,0,0,.4)}
-.kpi-ico svg{width:1.15rem;height:1.15rem;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.kpi-body{flex:1;padding-left:.8rem;min-width:0}
-.kpi-lbl{font-size:.62rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem}
-.kpi-val{font-size:1.35rem;font-weight:700;color:var(--dark);line-height:1.1}
-.kpi-sub{font-size:.68rem;color:var(--muted);margin-top:.25rem}
-.kpi-sub .up{color:#10b981}.kpi-sub .dn{color:#f85149}.kpi-sub .wa{color:#e3b341}
-.g-dark{background:linear-gradient(135deg,#30363d,#21262d)}
+/* ── KPI PANELS (2-column, 4 rows each) ──── */
+.kpi-panels{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.kpi-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.kpi-panel-hdr{padding:.5rem 1rem .45rem;border-bottom:1px solid var(--border);font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;background:var(--surface2)}
+.kpi-mini{display:flex;align-items:center;gap:.75rem;padding:.55rem 1rem;border-bottom:1px solid var(--border);transition:background .15s}
+.kpi-mini:last-child{border-bottom:none}
+.kpi-mini:hover{background:rgba(255,255,255,.025)}
+.km-ico{width:1.9rem;height:1.9rem;border-radius:.4rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.km-ico svg{width:.82rem;height:.82rem;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.km-body{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.km-lbl{font-size:.63rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.km-vals{display:flex;align-items:baseline;gap:.4rem;flex-shrink:0}
+.km-abs{font-size:1.05rem;font-weight:700;color:var(--dark);line-height:1}
+.km-pct{font-size:.7rem;font-weight:600;min-width:3.5rem;text-align:right}
+.km-pct.up{color:#3fb950}.km-pct.dn{color:#f85149}.km-pct.wa{color:#e3b341}.km-pct.bl{color:#58a6ff}.km-pct.mu{color:var(--muted)}
+.g-dark{background:linear-gradient(135deg,#4a5568,#2d3748)}
 .g-blue{background:linear-gradient(135deg,#388bfd,#1A73E8)}
 .g-green{background:linear-gradient(135deg,#3fb950,#238636)}
 .g-orange{background:linear-gradient(135deg,#f0883e,#db6d28)}
@@ -183,8 +187,7 @@ tr:hover td{background:rgba(255,255,255,.03)}
 @keyframes slideUp{from{transform:translateY(.75rem);opacity:0}to{transform:translateY(0);opacity:1}}
 
 /* ── RESPONSIVE ──────────────────────────── */
-@media(max-width:1300px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.cr2{grid-template-columns:1fr}}
+@media(max-width:1100px){.kpi-panels{grid-template-columns:1fr}.cr2{grid-template-columns:1fr}}
 @media(max-width:768px){.sidebar{display:none}.main{margin-left:0}.kpi-grid{grid-template-columns:1fr}}
 
 /* ── NOTICE ──────────────────────────────── */
@@ -271,6 +274,7 @@ function parseDate(str) {
 function dateOnly(d) { return d ? new Date(d.getFullYear(),d.getMonth(),d.getDate()) : null; }
 function daysBetween(a,b) { return (!a||!b) ? null : Math.round((b-a)/86400000); }
 function fmtPct(v) { return v==null ? '—' : v.toFixed(1)+'%'; }
+function calcPct(n,d) { return d>0 ? (n/d*100).toFixed(1)+'%' : '—'; }
 
 /* ─── KPI CALC ───────────────────────────── */
 function calcKPIs(ships) {
@@ -732,24 +736,99 @@ function App() {
         <div className="content">
           {err&&<div className="notice"><IWarn/><span>Warning: {err}</span></div>}
 
-          {/* KPI CARDS */}
-          <div className="kpi-grid">
-            <KpiCard label="Total Containers" value={kpi.totalContainers}
-              sub={`${kpi.inTransit} in transit · ${kpi.delivered} delivered`} gradient="g-dark" icon={IBox}/>
-            <KpiCard label="Containers at Port" value={kpi.atPort}
-              sub={`Awaiting pickup · <b>${kpi.inTransit}</b> in transit`} gradient="g-orange" icon={IShip}/>
-            <KpiCard label="Custom Declarations" value={kpi.declarations}
-              sub={`<span class="up">${kpi.correct} correct</span> · <span class="dn">${kpi.incorrect} incorrect</span>`} gradient="g-blue" icon={IDoc}/>
-            <KpiCard label="Customer Complaints" value={kpi.complaints}
-              sub={`Of ${kpi.totalContainers} total containers`} gradient="g-red" icon={IWarn}/>
-            <KpiCard label="On-Time Delivery" value={fmtPct(kpi.onTimeRate)}
-              sub={`${kpi.onTime} / ${kpi.withDates} containers on time`}
-              gradient={kpi.onTimeRate>=80?'g-green':'g-orange'} icon={ITime}/>
-            <KpiCard label="Declaration Accuracy" value={fmtPct(kpi.decAcc)}
-              sub={`${kpi.correct} correct / ${kpi.declarations} total`}
-              gradient={kpi.decAcc>=90?'g-green':'g-purple'} icon={ICheck}/>
-            <KpiCard label="Delivered Containers" value={kpi.delivered}
-              sub={`<span class="up">${kpi.totalContainers?(kpi.delivered/kpi.totalContainers*100).toFixed(1):0}%</span> of total containers`} gradient="g-green" icon={ITruck}/>
+          {/* KPI PANELS */}
+          <div className="kpi-panels">
+
+            {/* LEFT — Container Status */}
+            <div className="kpi-panel">
+              <div className="kpi-panel-hdr">Container Status</div>
+              <div className="kpi-mini">
+                <div className="km-ico g-dark"><IBox/></div>
+                <div className="km-body">
+                  <span className="km-lbl">Total Containers</span>
+                  <div className="km-vals">
+                    <span className="km-abs">{kpi.totalContainers}</span>
+                    <span className="km-pct bl">100%</span>
+                  </div>
+                </div>
+              </div>
+              <div className="kpi-mini">
+                <div className="km-ico g-orange"><IShip/></div>
+                <div className="km-body">
+                  <span className="km-lbl">At Port</span>
+                  <div className="km-vals">
+                    <span className="km-abs">{kpi.atPort}</span>
+                    <span className="km-pct wa">{calcPct(kpi.atPort,kpi.totalContainers)}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="kpi-mini">
+                <div className="km-ico g-blue"><ITruck/></div>
+                <div className="km-body">
+                  <span className="km-lbl">In Transit</span>
+                  <div className="km-vals">
+                    <span className="km-abs">{kpi.inTransit}</span>
+                    <span className="km-pct bl">{calcPct(kpi.inTransit,kpi.totalContainers)}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="kpi-mini">
+                <div className="km-ico g-green"><ICheck/></div>
+                <div className="km-body">
+                  <span className="km-lbl">Delivered</span>
+                  <div className="km-vals">
+                    <span className="km-abs">{kpi.delivered}</span>
+                    <span className="km-pct up">{calcPct(kpi.delivered,kpi.totalContainers)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT — Performance */}
+            <div className="kpi-panel">
+              <div className="kpi-panel-hdr">Performance</div>
+              <div className="kpi-mini">
+                <div className="km-ico g-blue"><IDoc/></div>
+                <div className="km-body">
+                  <span className="km-lbl">Custom Declarations</span>
+                  <div className="km-vals">
+                    <span className="km-abs">{kpi.declarations}</span>
+                    <span className="km-pct bl">{calcPct(kpi.declarations,kpi.totalContainers)}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="kpi-mini">
+                <div className="km-ico g-red"><IWarn/></div>
+                <div className="km-body">
+                  <span className="km-lbl">Customer Complaints</span>
+                  <div className="km-vals">
+                    <span className="km-abs">{kpi.complaints}</span>
+                    <span className={`km-pct${kpi.complaints===0?' up':' dn'}`}>{calcPct(kpi.complaints,kpi.totalContainers)}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="kpi-mini">
+                <div className="km-ico" style={{background:kpi.onTimeRate>=80?'linear-gradient(135deg,#3fb950,#238636)':kpi.onTimeRate>=60?'linear-gradient(135deg,#f0883e,#db6d28)':'linear-gradient(135deg,#f85149,#da3633)'}}><ITime/></div>
+                <div className="km-body">
+                  <span className="km-lbl">On-Time Delivery</span>
+                  <div className="km-vals">
+                    <span className="km-abs">{kpi.onTime}<span style={{fontSize:'.65rem',color:'var(--muted)',fontWeight:400}}>/{kpi.withDates}</span></span>
+                    <span className={`km-pct${kpi.onTimeRate>=80?' up':kpi.onTimeRate>=60?' wa':' dn'}`}>{fmtPct(kpi.onTimeRate)}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="kpi-mini">
+                <div className="km-ico" style={{background:kpi.decAcc>=90?'linear-gradient(135deg,#3fb950,#238636)':kpi.decAcc>=70?'linear-gradient(135deg,#bc8cff,#8957e5)':'linear-gradient(135deg,#f85149,#da3633)'}}><ICheck/></div>
+                <div className="km-body">
+                  <span className="km-lbl">Declaration Accuracy</span>
+                  <div className="km-vals">
+                    <span className="km-abs">{kpi.correct}<span style={{fontSize:'.65rem',color:'var(--muted)',fontWeight:400}}>/{kpi.declarations}</span></span>
+                    <span className={`km-pct${kpi.decAcc>=90?' up':kpi.decAcc>=70?' wa':' dn'}`}>{fmtPct(kpi.decAcc)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           {/* CHARTS ROW 1 */}
