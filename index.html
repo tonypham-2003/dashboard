@@ -83,20 +83,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--dark);display:flex
 .filter-bar{
   background:var(--surface);
   border-bottom:1px solid var(--border);
-  padding:.6rem 1.5rem;
-  display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;
+  padding:.5rem 1.5rem;
+  display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;
 }
-.fbar-label{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-right:.3rem;white-space:nowrap}
+.fbar-group{display:flex;align-items:center;gap:.25rem;flex-wrap:wrap}
+.fbar-sep{width:1px;height:1.2rem;background:var(--border);margin:0 .35rem;flex-shrink:0}
 .fbar-btn{
-  padding:.28rem .8rem;border-radius:2rem;
+  padding:.22rem .65rem;border-radius:2rem;
   border:1px solid var(--border);background:transparent;
-  color:var(--muted);font-size:.74rem;font-weight:500;font-family:var(--font);
-  cursor:pointer;transition:all .15s;white-space:nowrap;
+  color:var(--muted);font-size:.72rem;font-weight:500;font-family:var(--font);
+  cursor:pointer;transition:all .15s;white-space:nowrap;line-height:1.4;
 }
 .fbar-btn:hover{border-color:rgba(88,166,255,.4);color:var(--dark)}
-.fbar-btn.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:700;box-shadow:0 2px 12px rgba(26,115,232,.35)}
-.fbar-sep{width:1px;height:1.1rem;background:var(--border);margin:0 .2rem}
-.fbar-count{margin-left:auto;font-size:.72rem;color:var(--muted);font-weight:500}
+.fbar-btn.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:700;box-shadow:0 2px 10px rgba(26,115,232,.3)}
+.fbar-btn.partial{background:rgba(26,115,232,.1);border-color:rgba(88,166,255,.4);color:#58a6ff;font-weight:600}
+.fbar-tag{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.2);margin-right:.1rem;padding-right:.25rem;border-right:1px solid var(--border);white-space:nowrap;line-height:1}
+.fbar-count{margin-left:auto;font-size:.71rem;color:var(--muted);font-weight:500;white-space:nowrap}
 .fbar-count b{color:var(--dark)}
 
 /* ── CONTENT ─────────────────────────────── */
@@ -215,24 +217,50 @@ const FIELDS = [
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MO_MAP = Object.fromEntries(MONTHS.map((m,i)=>[m,i]));
 
-/* ─── TIME FILTER ────────────────────────── */
-const PERIOD_LABELS = {
-  all:'All', q1:'Q1', q2:'Q2', q3:'Q3', q4:'Q4', h1:'H1 2026', h2:'H2 2026'
-};
-function filterByPeriod(ships, period) {
-  if (period === 'all') return ships;
+/* ─── TIME FILTER (multi-select months) ─── */
+const Q_MONTHS = [[0,1,2],[3,4,5],[6,7,8],[9,10,11]]; // Q1-Q4
+
+function filterByMonths(ships, sel) {
+  if (sel.size === 0) return ships;
   return ships.filter(s => {
     const d = parseDate(s.eta);
-    if (!d) return false;
-    const mo = d.getMonth();
-    if (period === 'q1') return mo <= 2;
-    if (period === 'q2') return mo >= 3 && mo <= 5;
-    if (period === 'q3') return mo >= 6 && mo <= 8;
-    if (period === 'q4') return mo >= 9;
-    if (period === 'h1') return mo <= 5;
-    if (period === 'h2') return mo >= 6;
-    return true;
+    return d && sel.has(d.getMonth());
   });
+}
+
+function toggleMonth(sel, mo) {
+  const next = new Set(sel);
+  if (next.has(mo)) next.delete(mo); else next.add(mo);
+  return next;
+}
+
+function toggleQuarter(sel, qi) {
+  const qm = Q_MONTHS[qi];
+  const allOn = qm.every(m => sel.has(m));
+  const next = new Set(sel);
+  if (allOn) qm.forEach(m => next.delete(m));
+  else qm.forEach(m => next.add(m));
+  return next;
+}
+
+function getWeekNum(d) {
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+}
+
+function toggleWeek(sel, weekNos, ships) {
+  // collect months that contain any of these week numbers
+  const wkDays = new Set();
+  ships.forEach(s => {
+    const d = parseDate(s.eta);
+    if (!d) return;
+    if (weekNos.includes(getWeekNum(d))) wkDays.add(d.getMonth());
+  });
+  const next = new Set(sel);
+  const allOn = [...wkDays].every(m => sel.has(m));
+  if (allOn) wkDays.forEach(m => next.delete(m));
+  else wkDays.forEach(m => next.add(m));
+  return next;
 }
 
 /* ─── SUPABASE DATA LAYER ────────────────── */
@@ -629,10 +657,10 @@ function App() {
   const [busy,    setBusy]   = useState(false);
   const [err,     setErr]    = useState(null);
   const [toast,   setToast]  = useState(null);
-  const [period,  setPeriod] = useState('all');
+  const [selMo,   setSelMo]  = useState(new Set());
   const toastDismiss = useCallback(()=>setToast(null),[]);
 
-  const filteredShips = useMemo(()=>filterByPeriod(ships,period),[ships,period]);
+  const filteredShips = useMemo(()=>filterByMonths(ships,selMo),[ships,selMo]);
 
   const fetchData = useCallback(async (silent=false) => {
     if(!silent) setBusy(true);
@@ -723,14 +751,75 @@ function App() {
 
         {/* TIME FILTER BAR */}
         <div className="filter-bar">
-          <span className="fbar-label"><IFilter style={{width:'.7rem',height:'.7rem',marginRight:'.3rem',verticalAlign:'middle'}}/>Period</span>
-          {Object.entries(PERIOD_LABELS).map(([k,v],i,arr)=>(
-            <React.Fragment key={k}>
-              {(k==='h1') && <span className="fbar-sep"/>}
-              <button className={`fbar-btn${period===k?' active':''}`} onClick={()=>setPeriod(k)}>{v}</button>
-            </React.Fragment>
-          ))}
-          <span className="fbar-count"><b>{filteredShips.length}</b> / {ships.length} shipments{period!=='all'&&` · ${PERIOD_LABELS[period]}`}</span>
+
+          {/* All */}
+          <div className="fbar-group">
+            <span className="fbar-tag">All</span>
+            <button className={`fbar-btn${selMo.size===0?' active':''}`}
+              onClick={()=>setSelMo(new Set())}>All</button>
+          </div>
+
+          <span className="fbar-sep"/>
+
+          {/* Weeks — last 8 ISO weeks */}
+          <div className="fbar-group">
+            <span className="fbar-tag">Wk</span>
+            {(()=>{
+              const today = new Date(2026,5,8);
+              const curWk = getWeekNum(today);
+              return Array.from({length:8},(_,i)=>curWk-7+i).filter(w=>w>0).map(wk=>{
+                const wkMos = new Set();
+                ships.forEach(s=>{const d=parseDate(s.eta);if(d&&getWeekNum(d)===wk)wkMos.add(d.getMonth());});
+                const active = wkMos.size>0&&[...wkMos].every(m=>selMo.has(m));
+                return(
+                  <button key={wk}
+                    className={`fbar-btn${active?' active':''}`}
+                    onClick={()=>setSelMo(prev=>{
+                      const next=new Set(prev);
+                      if(active)wkMos.forEach(m=>next.delete(m));
+                      else wkMos.forEach(m=>next.add(m));
+                      return next;
+                    })}>W{wk}</button>
+                );
+              });
+            })()}
+          </div>
+
+          <span className="fbar-sep"/>
+
+          {/* Months */}
+          <div className="fbar-group">
+            <span className="fbar-tag">Mo</span>
+            {MONTHS.map((mo,i)=>(
+              <button key={mo}
+                className={`fbar-btn${selMo.has(i)?' active':''}`}
+                onClick={()=>setSelMo(prev=>toggleMonth(prev,i))}>{mo}</button>
+            ))}
+          </div>
+
+          <span className="fbar-sep"/>
+
+          {/* Quarters */}
+          <div className="fbar-group">
+            <span className="fbar-tag">Qtr</span>
+            {[0,1,2,3].map(qi=>{
+              const qm=Q_MONTHS[qi];
+              const allOn=qm.every(m=>selMo.has(m));
+              const partial=!allOn&&qm.some(m=>selMo.has(m));
+              return(
+                <button key={qi}
+                  className={`fbar-btn${allOn?' active':partial?' partial':''}`}
+                  onClick={()=>setSelMo(prev=>toggleQuarter(prev,qi))}>Q{qi+1}</button>
+              );
+            })}
+          </div>
+
+          {/* Count */}
+          <span className="fbar-count" style={{marginLeft:'auto'}}>
+            <b>{filteredShips.length}</b> / {ships.length} shipments
+            {selMo.size>0&&<> · <span style={{color:'#58a6ff'}}>{selMo.size} month{selMo.size>1?'s':''}</span></>}
+          </span>
+
         </div>
 
         <div className="content">
