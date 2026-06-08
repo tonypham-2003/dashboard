@@ -671,6 +671,91 @@ function BarVol({ships}) {
   );
 }
 
+/* ─── VIETNAM MAP ────────────────────────── */
+function VietnamMap({portData}) {
+  const [hov, setHov] = React.useState(null);
+  /* geographic coords — slightly spread Hai Phong / Lach Huyen and Cat Lai / Cai Mep so dots don't stack */
+  const PORTS = [
+    {key:'Hai Phong', lat:20.85,lon:106.62,anchor:'end',  dx:-6,dy:-2},
+    {key:'Lach Huyen',lat:20.68,lon:107.05,anchor:'start',dx:6, dy:9},
+    {key:'Da Nang',   lat:16.07,lon:108.22,anchor:'start',dx:6, dy:0},
+    {key:'Cat Lai',   lat:10.85,lon:106.56,anchor:'end',  dx:-6,dy:-8},
+    {key:'Cai Mep',   lat:10.33,lon:107.10,anchor:'start',dx:6, dy:4},
+  ];
+  const toX=lon=>(lon-102)/8*200;
+  const toY=lat=>(23.5-lat)/15*500;
+  /* normalise port names ("Cat Lai Port" → "Cat Lai") */
+  const cm={};
+  portData.forEach(([n,v])=>{const k=n.replace(/ Port$/i,'').trim();cm[k]=(cm[k]||0)+v;});
+  const mx=Math.max(...Object.values(cm),1);
+  const tot=portData.reduce((s,[,v])=>s+v,0);
+  /* simplified Vietnam polygon – viewBox 0 0 200 500 */
+  const VP="M 22,65 L 45,32 L 88,18 L 118,48 L 148,65 L 130,88 L 122,90 L 97,122 L 92,160 L 112,200 L 138,233 L 155,247 L 162,262 L 180,316 L 183,350 L 180,373 L 163,420 L 148,432 L 128,438 L 118,424 L 110,443 L 90,480 L 72,498 L 60,488 L 55,455 L 63,437 L 72,422 L 80,383 L 95,350 L 100,333 L 113,316 L 125,300 L 137,267 L 130,255 L 112,233 L 112,216 L 95,200 L 87,183 L 62,167 L 38,132 L 30,117 L 38,83 L 18,76 Z";
+  return (
+    <div style={{display:'flex',height:'100%',gap:'1.5rem',alignItems:'center'}}>
+      {/* SVG map */}
+      <div style={{flexShrink:0,height:'100%',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <svg viewBox="0 0 200 500" style={{height:'100%',width:'auto',maxHeight:'320px'}} preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <radialGradient id="vg" cx="45%" cy="35%" r="70%">
+              <stop offset="0%" stopColor="rgba(109,40,217,.22)"/>
+              <stop offset="100%" stopColor="rgba(79,70,229,.06)"/>
+            </radialGradient>
+          </defs>
+          <path d={VP} fill="url(#vg)" stroke="rgba(139,92,246,.55)" strokeWidth="1.2" strokeLinejoin="round"/>
+          {PORTS.map(({key,lat,lon,anchor,dx,dy})=>{
+            const x=toX(lon),y=toY(lat),cnt=cm[key]||0;
+            const r=cnt?Math.max(5,4+(cnt/mx)*13):3;
+            const h=hov===key;
+            return (
+              <g key={key} onMouseEnter={()=>setHov(key)} onMouseLeave={()=>setHov(null)} style={{cursor:'default'}}>
+                {cnt>0&&<circle cx={x} cy={y} r={r+7} fill="rgba(124,58,237,.08)" stroke="rgba(167,139,250,.2)" strokeWidth=".6"/>}
+                <circle cx={x} cy={y} r={cnt?r:3}
+                  fill={cnt?(h?'#c4b5fd':'rgba(139,92,246,.83)'):'rgba(124,58,237,.2)'}
+                  stroke="rgba(196,181,253,.5)" strokeWidth=".8"/>
+                <text x={x+dx} y={y+dy-1} textAnchor={anchor} fontSize="6.5"
+                  fill="rgba(196,181,253,.85)" fontFamily="'Plus Jakarta Sans',sans-serif" fontWeight="600">{key}</text>
+                <text x={x+dx} y={y+dy+8} textAnchor={anchor} fontSize="9"
+                  fill={cnt?'#ece8ff':'rgba(124,58,237,.4)'} fontFamily="'Plus Jakarta Sans',sans-serif" fontWeight="800">{cnt}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+      {/* Port stats list */}
+      <div style={{flex:1,display:'flex',flexDirection:'column',gap:'.65rem',minWidth:0}}>
+        {[...portData].sort((a,b)=>b[1]-a[1]).map(([name,n])=>{
+          const k=name.replace(/ Port$/i,'').trim();
+          const pct=tot?Math.round(n/tot*100):0;
+          const h=hov===k;
+          return (
+            <div key={name} onMouseEnter={()=>setHov(k)} onMouseLeave={()=>setHov(null)}
+              style={{opacity:hov&&!h?.5:1,transition:'opacity .15s'}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:'.2rem',fontSize:'.71rem'}}>
+                <span style={{color:h?'#c4b5fd':'var(--muted)',fontWeight:600,whiteSpace:'nowrap',transition:'color .15s'}}>{k}</span>
+                <div style={{display:'flex',gap:'.3rem',alignItems:'baseline'}}>
+                  <span style={{color:'var(--dark)',fontWeight:700}}>{n}</span>
+                  <span style={{color:'var(--muted)',fontSize:'.64rem'}}>({pct}%)</span>
+                </div>
+              </div>
+              <div style={{height:'4px',borderRadius:'99px',background:'rgba(139,92,246,.1)',overflow:'hidden'}}>
+                <div style={{width:`${pct}%`,height:'100%',borderRadius:'99px',
+                  background:h?'rgba(196,181,253,.9)':'linear-gradient(90deg,rgba(139,92,246,.85),rgba(167,139,250,.65))',
+                  transition:'width .5s ease'}}/>
+              </div>
+            </div>
+          );
+        })}
+        <div style={{marginTop:'.2rem',paddingTop:'.55rem',borderTop:'1px solid var(--border)',
+          display:'flex',justifyContent:'space-between',fontSize:'.72rem'}}>
+          <span style={{color:'var(--muted)'}}>Total</span>
+          <span style={{color:'var(--dark)',fontWeight:700}}>{tot} shipments</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── TABLE ──────────────────────────────── */
 const PAGE=20;
 function Table({ships}) {
@@ -917,7 +1002,6 @@ function App() {
   const accMo=monthlyAccuracy(filteredShips);
   const otMo=monthlyOnTime(filteredShips);
   const portD=byGroup(filteredShips,'destinationPort');
-  const plantD=byGroup(filteredShips,'plant');
 
   return (
     <>
@@ -1184,22 +1268,17 @@ function App() {
               <div className="cw"><LineOT data={otMo}/></div>
             </div>
             <div className="chart-card">
-              <div className="cc-hdr"><div className="cc-title">Containers by Destination Port</div>
-                <div className="cc-sub">Volume by destination</div></div>
-              <div className="cw-sm"><BarH data={portD}/></div>
+              <div className="cc-hdr"><div className="cc-title">Volume by Destination Port</div>
+                <div className="cc-sub">Container distribution · Vietnam</div></div>
+              <div style={{height:330}}><VietnamMap portData={portD}/></div>
             </div>
           </div>
 
           {/* CHARTS ROW 3 */}
-          <div className="charts-row cr2">
+          <div className="charts-row">
             <div className="chart-card">
               <div className="cc-hdr"><div className="cc-title">Container Volume</div></div>
               <div className="cw"><BarVol ships={filteredShips}/></div>
-            </div>
-            <div className="chart-card">
-              <div className="cc-hdr"><div className="cc-title">Containers by Plant</div>
-                <div className="cc-sub">Delivery point breakdown</div></div>
-              <div className="cw-sm"><BarH data={plantD}/></div>
             </div>
           </div>
 
