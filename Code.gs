@@ -25,7 +25,7 @@ function syncNow() {
     Logger.log('Sheet: ' + sheet.getName() + ' | lastRow: ' + lastRow + ' | SS: ' + ss.getName());
     if (lastRow < 2) { Logger.log('Sheet trống.'); return; }
 
-    var raw  = sheet.getRange(2, 1, lastRow - 1, 22).getValues();
+    var raw  = sheet.getRange(3, 2, lastRow - 2, 22).getValues();
     var rows = raw
       .filter(function(r) { return r[1] !== '' && r[1] !== null && r[1] !== undefined; })
       .map(function(r) {
