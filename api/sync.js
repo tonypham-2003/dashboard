@@ -17,21 +17,11 @@ module.exports = async function handler(req, res) {
   const SURL = process.env.SUPABASE_URL;
   const SKEY = process.env.SUPABASE_SERVICE_KEY;
 
-  // GET → diagnostic
+  // GET → trigger Apps Script to sync
   if (req.method === 'GET') {
-    const results = { url: SURL || 'MISSING', key: SKEY ? `set(${SKEY.length})` : 'MISSING' };
-    // Test 1: basic internet
-    try { await fetch('https://httpbin.org/get'); results.internet = 'ok'; }
-    catch (e) { results.internet = e.message; }
-    // Test 2: Supabase ping
-    try {
-      const t = await fetch(`${SURL}/rest/v1/`, { headers: { apikey: SKEY } });
-      results.supabase = `HTTP ${t.status}`;
-    } catch (e) {
-      results.supabase = e.message;
-      results.cause = e.cause ? String(e.cause) : undefined;
-    }
-    return res.json(results);
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyzDiMe_QbZhq2Q9cJhVeM0_I7N10hQAFp4ry5blyuunFluDaNsN5WGR2ZzRGxC69l-Gg/exec';
+    fetch(APPS_SCRIPT_URL).catch(() => {});
+    return res.json({ triggered: true, message: 'Sync đang chạy, dashboard sẽ cập nhật trong vài giây.' });
   }
 
   try {

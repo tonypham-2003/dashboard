@@ -67,3 +67,9 @@ function setupTrigger() {
 }
 
 function manualSync() { syncNow(); }
+
+function doGet(e) {
+  syncNow();
+  return ContentService.createTextOutput(JSON.stringify({ ok: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
