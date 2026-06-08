@@ -32,7 +32,7 @@
 ┌──────────────────────────────────────────────────────────────┐
 │  SUPABASE  (PostgreSQL · Singapore ap-southeast-1)           │
 │  https://shuiloynbgpazmipxckz.supabase.co                    │
-│  Table: shipments  (21 text cols + bigserial id)             │
+│  Table: shipments  (22 text cols + bigserial id)             │
 │  Table: sync_log   (id, synced_at, rows_count)               │
 │  RLS: public SELECT on both · Realtime ON for sync_log       │
 └──────────────────┬───────────────────────────────────────────┘
@@ -78,7 +78,7 @@
 
 ---
 
-## Column Schema (Sheet1, row 2+, 21 columns A–U)
+## Column Schema (Sheet1, row 2+, 22 columns A–V)
 
 | Col | Index | JS camelCase | DB snake_case | Notes |
 |-----|-------|-------------|---------------|-------|
@@ -87,15 +87,16 @@
 | C | 2 | invoiceNo | invoice_no | |
 | D | 3 | containerNo | container_no | |
 | E | 4 | blNo | bl_no | |
-| F | 5 | destinationPort | destination_port | Cat Lai / Cai Mep / Da Nang / Hai Phong / Lach Huyen |
-| G | 6 | plant | plant | HCMC / Hanoi / Bac Ninh / Dong Nai / Binh Duong / Da Nang / Hai Phong |
-| H–P | 7–15 | dates + status | text cols | Format: `HH:mm - DD Mon` |
-| M | 12 | customsLine | customs_line | Green / Yellow / Red |
-| Q | 16 | truckPlate | truck_plate | |
-| R | 17 | driverTelephone | driver_telephone | |
-| S | 18 | pickupAtPort | pickup_at_port | Yes / No |
-| T | 19 | deliverToPlant | deliver_to_plant | Yes / No |
-| U | 20 | customerComplaint | customer_complaint | No Complaint / Late Delivery |
+| F | 5 | cusDecNo | cus_dec_no | Customs Declaration Number — e.g. `374876972043` |
+| G | 6 | destinationPort | destination_port | Cat Lai / Cai Mep / Da Nang / Hai Phong / Lach Huyen |
+| H | 7 | plant | plant | HCMC / Hanoi / Bac Ninh / Dong Nai / Binh Duong / Da Nang / Hai Phong |
+| I–Q | 8–16 | dates + status | text cols | Format: `HH:mm - DD Mon` |
+| N | 13 | customsLine | customs_line | Green / Yellow / Red |
+| R | 17 | truckPlate | truck_plate | |
+| S | 18 | driverTelephone | driver_telephone | |
+| T | 19 | pickupAtPort | pickup_at_port | Yes / No |
+| U | 20 | deliverToPlant | deliver_to_plant | Yes / No |
+| V | 21 | customerComplaint | customer_complaint | No Complaint / Late Delivery |
 
 ---
 
@@ -164,7 +165,7 @@ Env vars are case-sensitive. Redeploy required after any change.
 create table if not exists shipments (
   id bigserial primary key,
   no text, po_no text, invoice_no text, container_no text, bl_no text,
-  destination_port text, plant text, doc_rec_date text, eta text, ata text,
+  cus_dec_no text, destination_port text, plant text, doc_rec_date text, eta text, ata text,
   cus_dec_date text, declaration_status text, customs_line text,
   tax_pay_date text, completed_cus_inspection text, customs_clearance_date text,
   truck_plate text, driver_telephone text, pickup_at_port text,

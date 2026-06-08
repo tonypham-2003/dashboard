@@ -9,7 +9,7 @@ var VERCEL_SYNC_URL = 'https://dashboard-red-mu-51.vercel.app/api/sync';
 var SYNC_SECRET     = 'tc2026secret';
 
 var COLS = [
-  'no','po_no','invoice_no','container_no','bl_no','destination_port','plant',
+  'no','po_no','invoice_no','container_no','bl_no','cus_dec_no','destination_port','plant',
   'doc_rec_date','eta','ata','cus_dec_date','declaration_status','customs_line',
   'tax_pay_date','completed_cus_inspection','customs_clearance_date',
   'truck_plate','driver_telephone','pickup_at_port','deliver_to_plant','customer_complaint'
@@ -25,7 +25,7 @@ function syncNow() {
     Logger.log('Sheet: ' + sheet.getName() + ' | lastRow: ' + lastRow + ' | SS: ' + ss.getName());
     if (lastRow < 2) { Logger.log('Sheet trống.'); return; }
 
-    var raw  = sheet.getRange(2, 1, lastRow - 1, 21).getValues();
+    var raw  = sheet.getRange(2, 1, lastRow - 1, 22).getValues();
     var rows = raw
       .filter(function(r) { return r[1] !== '' && r[1] !== null && r[1] !== undefined; })
       .map(function(r) {

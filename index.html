@@ -173,7 +173,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const FIELDS = [
-  'no','poNo','invoiceNo','containerNo','blNo','destinationPort','plant',
+  'no','poNo','invoiceNo','containerNo','blNo','cusDecNo','destinationPort','plant',
   'docRecDate','eta','ata','cusDecDate','declarationStatus','customsLine',
   'taxPayDate','completedCusInspection','customsClearanceDate',
   'truckPlate','driverTelephone','pickupAtPort','deliverToPlant','customerComplaint'
@@ -195,7 +195,7 @@ function mapSupabaseRow(r) {
   return {
     no: r.no||'', poNo: r.po_no||'', invoiceNo: r.invoice_no||'',
     containerNo: r.container_no||'', blNo: r.bl_no||'',
-    destinationPort: r.destination_port||'', plant: r.plant||'',
+    cusDecNo: r.cus_dec_no||'', destinationPort: r.destination_port||'', plant: r.plant||'',
     docRecDate: r.doc_rec_date||'', eta: r.eta||'', ata: r.ata||'',
     cusDecDate: r.cus_dec_date||'', declarationStatus: r.declaration_status||'',
     customsLine: r.customs_line||'', taxPayDate: r.tax_pay_date||'',
@@ -452,14 +452,14 @@ function Table({ships}) {
       <div className="tbl-scroll">
         <table>
           <thead><tr>
-            <th>#</th><th>PO No</th><th>Container No</th><th>BL No</th>
+            <th>#</th><th>PO No</th><th>Container No</th><th>BL No</th><th>Cus Dec No</th>
             <th>Cảng</th><th>Nhà Máy</th><th>ETA</th><th>ATA</th>
             <th>Tờ Khai</th><th>Luồng</th><th>Thông Quan</th>
             <th>Lấy Cont</th><th>Giao NM</th><th>Phản Ánh</th>
           </tr></thead>
           <tbody>
             {slice.length===0
-              ? <tr><td colSpan={14} style={{textAlign:'center',color:'var(--muted)',padding:'2rem'}}>Không có dữ liệu phù hợp</td></tr>
+              ? <tr><td colSpan={15} style={{textAlign:'center',color:'var(--muted)',padding:'2rem'}}>Không có dữ liệu phù hợp</td></tr>
               : slice.map(s=>{
                 const late=(()=>{const e=parseDate(s.eta),a=parseDate(s.ata);return e&&a&&dateOnly(a)>dateOnly(e);})();
                 return(
@@ -468,6 +468,7 @@ function Table({ships}) {
                     <td style={{fontWeight:600}}>{s.poNo}</td>
                     <td style={{fontFamily:'monospace',fontSize:'.76rem'}}>{s.containerNo}</td>
                     <td style={{fontFamily:'monospace',fontSize:'.76rem'}}>{s.blNo}</td>
+                    <td style={{fontFamily:'monospace',fontSize:'.76rem'}}>{s.cusDecNo}</td>
                     <td>{s.destinationPort.replace(' Port','')}</td>
                     <td>{s.plant.replace(' Plant','')}</td>
                     <td>{s.eta}</td>

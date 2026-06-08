@@ -2,7 +2,7 @@
 const { createClient } = require('@supabase/supabase-js');
 
 const COLS = [
-  'no','po_no','invoice_no','container_no','bl_no','destination_port','plant',
+  'no','po_no','invoice_no','container_no','bl_no','cus_dec_no','destination_port','plant',
   'doc_rec_date','eta','ata','cus_dec_date','declaration_status','customs_line',
   'tax_pay_date','completed_cus_inspection','customs_clearance_date',
   'truck_plate','driver_telephone','pickup_at_port','deliver_to_plant','customer_complaint'

@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS shipments (
   invoice_no              TEXT,
   container_no            TEXT,
   bl_no                   TEXT,
+  cus_dec_no              TEXT,
   destination_port        TEXT,
   plant                   TEXT,
   doc_rec_date            TEXT,
@@ -51,3 +52,6 @@ ALTER TABLE sync_log REPLICA IDENTITY FULL;
 CREATE INDEX IF NOT EXISTS idx_shipments_no   ON shipments(no);
 CREATE INDEX IF NOT EXISTS idx_shipments_port ON shipments(destination_port);
 CREATE INDEX IF NOT EXISTS idx_shipments_line ON shipments(customs_line);
+
+-- 6. Migration: thêm cột cus_dec_no (chạy nếu bảng đã tồn tại)
+ALTER TABLE shipments ADD COLUMN IF NOT EXISTS cus_dec_no TEXT;
