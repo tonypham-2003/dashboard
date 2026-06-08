@@ -79,27 +79,74 @@ body{font-family:var(--font);background:var(--bg);color:var(--dark);display:flex
 .btn-refresh.spin svg{animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── FILTER BAR (time period) ────────────── */
+/* ── FILTER BAR ──────────────────────────── */
 .filter-bar{
-  background:var(--surface);
-  border-bottom:1px solid var(--border);
-  padding:.5rem 1.5rem;
-  display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:.55rem 1.5rem;display:flex;align-items:center;gap:.6rem;
 }
-.fbar-group{display:flex;align-items:center;gap:.25rem;flex-wrap:wrap}
-.fbar-sep{width:1px;height:1.2rem;background:var(--border);margin:0 .35rem;flex-shrink:0}
-.fbar-btn{
-  padding:.22rem .65rem;border-radius:2rem;
-  border:1px solid var(--border);background:transparent;
-  color:var(--muted);font-size:.72rem;font-weight:500;font-family:var(--font);
-  cursor:pointer;transition:all .15s;white-space:nowrap;line-height:1.4;
+/* ── DROPDOWN BOXES ──────────────────────── */
+.fb-box{position:relative}
+.fb-trigger{
+  display:flex;align-items:center;gap:.45rem;min-width:130px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:.5rem;
+  padding:.36rem .8rem;color:var(--dark);font-family:var(--font);
+  cursor:pointer;transition:all .18s;
 }
-.fbar-btn:hover{border-color:rgba(88,166,255,.4);color:var(--dark)}
-.fbar-btn.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:700;box-shadow:0 2px 10px rgba(26,115,232,.3)}
-.fbar-btn.partial{background:rgba(26,115,232,.1);border-color:rgba(88,166,255,.4);color:#58a6ff;font-weight:600}
-.fbar-tag{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.2);margin-right:.1rem;padding-right:.25rem;border-right:1px solid var(--border);white-space:nowrap;line-height:1}
-.fbar-count{margin-left:auto;font-size:.71rem;color:var(--muted);font-weight:500;white-space:nowrap}
-.fbar-count b{color:var(--dark)}
+.fb-trigger:hover{border-color:rgba(88,166,255,.35)}
+.fb-trigger.open,.fb-trigger:focus-visible{border-color:rgba(88,166,255,.55);box-shadow:0 0 0 3px rgba(26,115,232,.12);outline:none}
+.fb-trigger.has-val{border-color:var(--accent)}
+.fb-trigger-lbl{font-size:.59rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;flex-shrink:0}
+.fb-trigger-val{flex:1;font-size:.78rem;font-weight:600;color:var(--dark);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fb-trigger.has-val .fb-trigger-val{color:#58a6ff}
+.fb-trigger svg{width:.75rem;height:.75rem;flex-shrink:0;stroke:var(--muted);fill:none;stroke-width:2.5;stroke-linecap:round;transition:transform .2s}
+.fb-trigger.open svg{transform:rotate(180deg)}
+/* dropdown panel */
+.fb-dd{
+  position:absolute;top:calc(100% + .5rem);left:0;z-index:600;
+  background:var(--surface);border:1px solid var(--border);border-radius:.8rem;
+  box-shadow:0 16px 48px rgba(0,0,0,.55);overflow:hidden;
+}
+.fb-dd-sm{min-width:120px}
+.fb-dd-lg{min-width:280px}
+/* tabs inside period dropdown */
+.fb-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface2)}
+.fb-tab{
+  flex:1;padding:.42rem .3rem;font-size:.68rem;font-weight:700;color:var(--muted);
+  background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;
+  font-family:var(--font);text-transform:uppercase;letter-spacing:.06em;transition:all .15s;
+}
+.fb-tab:hover{color:var(--dark)}
+.fb-tab.active{color:#58a6ff;border-bottom-color:#58a6ff;background:rgba(88,166,255,.05)}
+/* option grid */
+.fb-grid{display:grid;gap:.28rem;padding:.65rem}
+.fb-g4{grid-template-columns:repeat(4,1fr)}
+.fb-g2{grid-template-columns:repeat(2,1fr)}
+.fb-g7{grid-template-columns:repeat(7,1fr);max-height:210px;overflow-y:auto}
+.fb-cell{
+  padding:.32rem .2rem;border-radius:.35rem;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-size:.7rem;font-weight:500;
+  font-family:var(--font);cursor:pointer;text-align:center;transition:all .13s;white-space:nowrap;
+}
+.fb-cell:hover{border-color:rgba(88,166,255,.4);color:var(--dark);background:rgba(255,255,255,.03)}
+.fb-cell.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.fb-cell.half{background:rgba(26,115,232,.1);border-color:rgba(88,166,255,.4);color:#58a6ff}
+.fb-cell-q{padding:.55rem .3rem;font-size:.78rem}
+.fb-cell-q small{display:block;font-size:.59rem;opacity:.7;margin-top:.1rem;font-weight:400}
+/* footer */
+.fb-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  padding:.45rem .65rem;border-top:1px solid var(--border);background:var(--surface2);
+}
+.fb-foot button{
+  font-size:.7rem;font-weight:600;padding:.26rem .6rem;border-radius:.35rem;
+  border:1px solid var(--border);background:transparent;color:var(--muted);
+  font-family:var(--font);cursor:pointer;transition:all .13s;
+}
+.fb-foot button:hover{color:var(--dark);border-color:rgba(88,166,255,.35)}
+.fb-apply{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important}
+.fb-sel-info{font-size:.67rem;color:var(--muted)}
+.fb-count{margin-left:auto;font-size:.71rem;color:var(--muted);white-space:nowrap}
+.fb-count b{color:var(--dark)}
 
 /* ── CONTENT ─────────────────────────────── */
 .content{padding:1.5rem;flex:1}
@@ -202,6 +249,14 @@ tr:hover td{background:rgba(255,255,255,.03)}
 
 <script type="text/babel">
 const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+function useClickOutside(ref, cb) {
+  useEffect(() => {
+    function h(e) { if (ref.current && !ref.current.contains(e.target)) cb(); }
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [ref, cb]);
+}
 
 /* ─── CONFIG ─────────────────────────────── */
 const SUPABASE_URL = 'https://shuiloynbgpazmipxckz.supabase.co';
@@ -410,7 +465,8 @@ const ITime   = ()=><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><pa
 const IDash   = ()=><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>;
 const IRefresh=()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>;
 const IWarn   = ()=><svg viewBox="0 0 24 24"><path d="M12 2L2 19h20L12 2zm0 7v5m0 3v1"/></svg>;
-const IFilter = ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>;
+const IFilter  = ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>;
+const IChevron = ()=><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>;
 
 function Badge({val}) {
   if(!val)return null;
@@ -656,11 +712,48 @@ function App() {
   const [loading, setLoading]= useState(true);
   const [busy,    setBusy]   = useState(false);
   const [err,     setErr]    = useState(null);
-  const [toast,   setToast]  = useState(null);
-  const [selMo,   setSelMo]  = useState(new Set());
+  const [toast,      setToast]      = useState(null);
+  const [selMo,      setSelMo]      = useState(new Set());
+  const [selWk,      setSelWk]      = useState(new Set());
+  const [viewMode,   setViewMode]   = useState('month');
+  const [yearOpen,   setYearOpen]   = useState(false);
+  const [periodOpen, setPeriodOpen] = useState(false);
+  const yearRef   = useRef(null);
+  const periodRef = useRef(null);
   const toastDismiss = useCallback(()=>setToast(null),[]);
+  useClickOutside(yearRef,   useCallback(()=>setYearOpen(false),  []));
+  useClickOutside(periodRef, useCallback(()=>setPeriodOpen(false), []));
 
-  const filteredShips = useMemo(()=>filterByMonths(ships,selMo),[ships,selMo]);
+  const filteredShips = useMemo(()=>{
+    if (viewMode==='week' && selWk.size>0) {
+      return ships.filter(s=>{ const d=parseDate(s.eta); return d&&selWk.has(getWeekNum(d)); });
+    }
+    if (selMo.size>0) {
+      return ships.filter(s=>{ const d=parseDate(s.eta); return d&&selMo.has(d.getMonth()); });
+    }
+    return ships;
+  },[ships,viewMode,selMo,selWk]);
+
+  const weeksWithData = useMemo(()=>{
+    const ws=new Set(); ships.forEach(s=>{const d=parseDate(s.eta);if(d)ws.add(getWeekNum(d));});
+    return [...ws].sort((a,b)=>a-b);
+  },[ships]);
+
+  const periodLabel = useMemo(()=>{
+    if (viewMode==='week') {
+      if (!selWk.size) return 'All';
+      const s=[...selWk].sort((a,b)=>a-b);
+      return s.length<=3?s.map(w=>`W${w}`).join(', '):`${s.length} weeks`;
+    }
+    if (!selMo.size) return 'All';
+    const qNames=Q_MONTHS.reduce((a,qm,qi)=>{if(qm.every(m=>selMo.has(m)))a.push(`Q${qi+1}`);return a;},[]);
+    if (qNames.length*3===selMo.size) return qNames.join(' + ');
+    const s=[...selMo].sort((a,b)=>a-b);
+    return s.length<=3?s.map(m=>MONTHS[m]).join(', '):`${s.length} months`;
+  },[viewMode,selMo,selWk]);
+
+  const hasFilter = selMo.size>0||(viewMode==='week'&&selWk.size>0);
+  const clearFilter = useCallback(()=>{setSelMo(new Set());setSelWk(new Set());},[]);
 
   const fetchData = useCallback(async (silent=false) => {
     if(!silent) setBusy(true);
@@ -749,75 +842,108 @@ function App() {
           </div>
         </div>
 
-        {/* TIME FILTER BAR */}
+        {/* FILTER BAR — two dropdown boxes */}
         <div className="filter-bar">
 
-          {/* All */}
-          <div className="fbar-group">
-            <span className="fbar-tag">All</span>
-            <button className={`fbar-btn${selMo.size===0?' active':''}`}
-              onClick={()=>setSelMo(new Set())}>All</button>
+          {/* ── YEAR BOX ── */}
+          <div className="fb-box" ref={yearRef}>
+            <button className={`fb-trigger${yearOpen?' open':''}`}
+              onClick={()=>setYearOpen(o=>!o)}>
+              <span className="fb-trigger-lbl">Year</span>
+              <span className="fb-trigger-val">2026</span>
+              <IChevron/>
+            </button>
+            {yearOpen&&(
+              <div className="fb-dd fb-dd-sm">
+                <div className="fb-grid fb-g4" style={{gridTemplateColumns:'1fr',minWidth:110}}>
+                  <button className="fb-cell on" onClick={()=>setYearOpen(false)}>2026</button>
+                </div>
+              </div>
+            )}
           </div>
 
-          <span className="fbar-sep"/>
+          {/* ── PERIOD BOX ── */}
+          <div className="fb-box" ref={periodRef}>
+            <button className={`fb-trigger${periodOpen?' open':''} ${hasFilter?'has-val':''}`}
+              onClick={()=>setPeriodOpen(o=>!o)}
+              style={{minWidth:160}}>
+              <span className="fb-trigger-lbl">Period</span>
+              <span className="fb-trigger-val">{periodLabel}</span>
+              <IChevron/>
+            </button>
+            {periodOpen&&(
+              <div className="fb-dd fb-dd-lg">
 
-          {/* Weeks — last 8 ISO weeks */}
-          <div className="fbar-group">
-            <span className="fbar-tag">Wk</span>
-            {(()=>{
-              const today = new Date(2026,5,8);
-              const curWk = getWeekNum(today);
-              return Array.from({length:8},(_,i)=>curWk-7+i).filter(w=>w>0).map(wk=>{
-                const wkMos = new Set();
-                ships.forEach(s=>{const d=parseDate(s.eta);if(d&&getWeekNum(d)===wk)wkMos.add(d.getMonth());});
-                const active = wkMos.size>0&&[...wkMos].every(m=>selMo.has(m));
-                return(
-                  <button key={wk}
-                    className={`fbar-btn${active?' active':''}`}
-                    onClick={()=>setSelMo(prev=>{
-                      const next=new Set(prev);
-                      if(active)wkMos.forEach(m=>next.delete(m));
-                      else wkMos.forEach(m=>next.add(m));
-                      return next;
-                    })}>W{wk}</button>
-                );
-              });
-            })()}
-          </div>
+                {/* Tabs */}
+                <div className="fb-tabs">
+                  {['month','quarter','week'].map(t=>(
+                    <button key={t} className={`fb-tab${viewMode===t?' active':''}`}
+                      onClick={()=>setViewMode(t)}>
+                      {t.charAt(0).toUpperCase()+t.slice(1)}
+                    </button>
+                  ))}
+                </div>
 
-          <span className="fbar-sep"/>
+                {/* Month grid */}
+                {viewMode==='month'&&(
+                  <div className="fb-grid fb-g4">
+                    {MONTHS.map((mo,i)=>(
+                      <button key={mo} className={`fb-cell${selMo.has(i)?' on':''}`}
+                        onClick={()=>setSelMo(prev=>toggleMonth(prev,i))}>{mo}</button>
+                    ))}
+                  </div>
+                )}
 
-          {/* Months */}
-          <div className="fbar-group">
-            <span className="fbar-tag">Mo</span>
-            {MONTHS.map((mo,i)=>(
-              <button key={mo}
-                className={`fbar-btn${selMo.has(i)?' active':''}`}
-                onClick={()=>setSelMo(prev=>toggleMonth(prev,i))}>{mo}</button>
-            ))}
-          </div>
+                {/* Quarter grid */}
+                {viewMode==='quarter'&&(
+                  <div className="fb-grid fb-g2">
+                    {[0,1,2,3].map(qi=>{
+                      const qm=Q_MONTHS[qi];
+                      const allOn=qm.every(m=>selMo.has(m));
+                      const half=!allOn&&qm.some(m=>selMo.has(m));
+                      return(
+                        <button key={qi}
+                          className={`fb-cell fb-cell-q${allOn?' on':half?' half':''}`}
+                          onClick={()=>setSelMo(prev=>toggleQuarter(prev,qi))}>
+                          Q{qi+1}
+                          <small>{MONTHS[qi*3]}–{MONTHS[qi*3+2]}</small>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
-          <span className="fbar-sep"/>
+                {/* Week grid */}
+                {viewMode==='week'&&(
+                  <div className="fb-grid fb-g7" style={{paddingBottom:'.5rem'}}>
+                    {weeksWithData.map(wk=>(
+                      <button key={wk}
+                        className={`fb-cell${selWk.has(wk)?' on':''}`}
+                        onClick={()=>setSelWk(prev=>{const n=new Set(prev);n.has(wk)?n.delete(wk):n.add(wk);return n;})}>
+                        {wk}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
-          {/* Quarters */}
-          <div className="fbar-group">
-            <span className="fbar-tag">Qtr</span>
-            {[0,1,2,3].map(qi=>{
-              const qm=Q_MONTHS[qi];
-              const allOn=qm.every(m=>selMo.has(m));
-              const partial=!allOn&&qm.some(m=>selMo.has(m));
-              return(
-                <button key={qi}
-                  className={`fbar-btn${allOn?' active':partial?' partial':''}`}
-                  onClick={()=>setSelMo(prev=>toggleQuarter(prev,qi))}>Q{qi+1}</button>
-              );
-            })}
+                {/* Footer */}
+                <div className="fb-foot">
+                  <button onClick={clearFilter}>Clear</button>
+                  <span className="fb-sel-info">
+                    {viewMode==='week'
+                      ? selWk.size>0?`${selWk.size} wk${selWk.size>1?'s':''}`:'All weeks'
+                      : selMo.size>0?`${selMo.size} month${selMo.size>1?'s':''}`:'All months'}
+                  </span>
+                  <button className="fb-apply" onClick={()=>setPeriodOpen(false)}>Apply ›</button>
+                </div>
+
+              </div>
+            )}
           </div>
 
           {/* Count */}
-          <span className="fbar-count" style={{marginLeft:'auto'}}>
+          <span className="fb-count">
             <b>{filteredShips.length}</b> / {ships.length} shipments
-            {selMo.size>0&&<> · <span style={{color:'#58a6ff'}}>{selMo.size} month{selMo.size>1?'s':''}</span></>}
           </span>
 
         </div>
