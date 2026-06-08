@@ -149,7 +149,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--dark);min-height:1
 .kpi-mini:last-child{border-bottom:none}
 .kpi-mini:hover{background:rgba(255,255,255,.025)}
 .km-ico{width:2.5rem;height:2.5rem;border-radius:.55rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.35)}
-.km-ico svg{width:1.15rem;height:1.15rem;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.km-ico svg{width:1.15rem;height:1.15rem;fill:white;stroke:none}
 .km-body{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
 .km-lbl{font-size:.65rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
 .km-vals{display:flex;align-items:baseline;gap:.45rem;flex-shrink:0}
@@ -485,23 +485,62 @@ function ChartEl({config,height=220}) {
 }
 
 /* ─── ICONS ──────────────────────────────── */
-/* ─── ICONS (stroke-based, inherit via .km-ico svg / .tn-logo-icon svg CSS) ── */
-const IBox     = ()=><svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>;
+/* ─── ICONS ─────────────────────────────────────────────────────────────────
+   Topnav / buttons: stroke-based (CSS applies stroke:white / stroke:muted)
+   KPI icons (.km-ico): filled (CSS applies fill:white;stroke:none)
+   Icons used in both contexts render correctly in each via specific CSS rules.
+─────────────────────────────────────────────────────────────────────────── */
+
+/* Topnav / button stroke icons */
 const IShip    = ()=><svg viewBox="0 0 24 24"><path d="M3 17l1.5-7L12 5l7.5 5L21 17H3zm9-12v5M5.5 10v4M18.5 10v4"/></svg>;
-const ITruck   = ()=><svg viewBox="0 0 24 24"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8zM5.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm13 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>;
-const IDoc     = ()=><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 13h8M8 17h5"/></svg>;
-const ICheck   = ()=><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>;
-const ITime    = ()=><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>;
 const IDash    = ()=><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>;
 const IRefresh = ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>;
 const IWarn    = ()=><svg viewBox="0 0 24 24"><path d="M12 2L2 19h20L12 2zm0 7v5m0 3v1"/></svg>;
 const IFilter  = ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>;
 const IChevron = ()=><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>;
-/* ── KPI-specific icons ── */
-const IAnchor  = ()=><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><path d="M12 8v14M5 11H2a10 10 0 0 0 20 0h-3"/><path d="M7 19l-5-8M17 19l5-8"/></svg>;
-const ICheckCircle=()=><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
-const IBell    = ()=><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><circle cx="12" cy="3" r="1" fill="white" stroke="none"/></svg>;
-const IShield  = ()=><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>;
+
+/* KPI filled icons — all use fill:white via .km-ico svg CSS */
+/* Total Containers — solid hexagonal cube silhouette */
+const IBox = ()=><svg viewBox="0 0 24 24">
+  <path d="M12 2L2.5 7.5v9L12 22l9.5-5.5v-9L12 2z"/>
+</svg>;
+/* At Port — anchor */
+const IAnchor = ()=><svg viewBox="0 0 24 24">
+  <circle cx="12" cy="5" r="3"/>
+  <rect x="11" y="7.5" width="2" height="12" rx="1"/>
+  <rect x="5" y="11" width="14" height="2.5" rx="1.25"/>
+  <path d="M5 20.5l1.2-3.5a8 8 0 0 0 11.6 0L19 20.5H5z"/>
+</svg>;
+/* In Transit — truck (filled closed paths) */
+const ITruck = ()=><svg viewBox="0 0 24 24">
+  <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9 1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+</svg>;
+/* Delivered — check circle (evenodd: circle white, checkmark shows background) */
+const ICheckCircle = ()=><svg viewBox="0 0 24 24" fillRule="evenodd">
+  <circle cx="12" cy="12" r="10"/>
+  <path d="M6 12l1.5-1.5 3.5 3.5 7-7 1.5 1.5-8.5 8.5L6 12z"/>
+</svg>;
+/* Custom Declarations — document */
+const IDoc = ()=><svg viewBox="0 0 24 24">
+  <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-5 8v-2h8v2H8zm0-4v-2h8v2H8z"/>
+</svg>;
+/* Customer Complaints — bell */
+const IBell = ()=><svg viewBox="0 0 24 24">
+  <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+</svg>;
+/* On-Time Delivery — clock (evenodd: white face, background-colored hands) */
+const ITime = ()=><svg viewBox="0 0 24 24" fillRule="evenodd">
+  <circle cx="12" cy="12" r="10"/>
+  <rect x="11" y="6" width="2" height="7" rx="1"/>
+  <rect x="11" y="11" width="6" height="2" rx="1"/>
+</svg>;
+/* Declaration Accuracy — shield + check (evenodd: white shield, background-colored check) */
+const IShield = ()=><svg viewBox="0 0 24 24" fillRule="evenodd">
+  <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+  <path d="M6 12l1.5-1.5 3.5 3.5 5.5-5.5 1.5 1.5-7 7L6 12z"/>
+</svg>;
+/* ICheck still needed for nav (stroke context) */
+const ICheck = ()=><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>;
 
 function Badge({val}) {
   if(!val)return null;
