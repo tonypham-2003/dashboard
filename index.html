@@ -400,10 +400,17 @@ function monthlyAccuracy(ships) {
   ships.filter(s=>s.cusDecDate&&s.declarationStatus).forEach(s=>{
     const d=parseDate(s.cusDecDate); if(!d)return;
     const k=MONTHS[d.getMonth()];
-    if(!m[k])m[k]={c:0,t:0}; m[k].t++;
-    if(s.declarationStatus==='Correct')m[k].c++;
+    if(!m[k])m[k]={correct:0,total:0};
+    m[k].total++;
+    if(s.declarationStatus==='Correct')m[k].correct++;
   });
-  return MONTHS.map(mo=>({label:mo,rate:m[mo]?+(m[mo].c/m[mo].t*100).toFixed(1):null,n:m[mo]?.t||0}));
+  return MONTHS.map(mo=>({
+    label:mo,
+    correct: m[mo]?.correct||0,
+    total:   m[mo]?.total||0,
+    target:  m[mo]?Math.round(m[mo].total*0.95):0,
+    rate:    m[mo]?+(m[mo].correct/m[mo].total*100).toFixed(1):null
+  }));
 }
 function monthlyOnTime(ships) {
   const m={};
@@ -527,10 +534,52 @@ function DonutChannels({g,y,r}) {
   );
 }
 
-function LineAcc({data}) {
-  const cfg={type:'line',data:{labels:data.map(d=>d.label),datasets:[{label:'Accuracy (%)',data:data.map(d=>d.rate),borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.08)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#58a6ff',fill:true,tension:.4,spanGaps:false}]},
-    options:{...CDEFS,plugins:{...CDEFS.plugins,tooltip:{...CDEFS.plugins.tooltip,callbacks:{label:ctx=>` ${ctx.parsed.y?.toFixed(1)}%`}}},
-      scales:{...CDEFS.scales,y:{...CDEFS.scales.y,min:0,max:100,ticks:{...CDEFS.scales.y.ticks,callback:v=>`${v}%`}}}}};
+function BarAcc({data}) {
+  const cfg={
+    type:'bar',
+    data:{
+      labels:data.map(d=>d.label),
+      datasets:[
+        {
+          type:'bar',label:'Correct',order:2,
+          data:data.map(d=>d.total>0?d.correct:null),
+          backgroundColor:'rgba(88,166,255,.65)',hoverBackgroundColor:'rgba(88,166,255,.85)',
+          borderRadius:5,borderSkipped:false,
+        },
+        {
+          type:'line',label:'Target (95%)',order:1,
+          data:data.map(d=>d.total>0?d.target:null),
+          borderColor:'#f0883e',backgroundColor:'transparent',
+          borderWidth:2,borderDash:[6,4],
+          pointRadius:4,pointBackgroundColor:'#f0883e',
+          pointBorderColor:'rgba(13,17,23,.8)',pointBorderWidth:1.5,
+          fill:false,tension:0,spanGaps:false,
+        }
+      ]
+    },
+    options:{
+      ...CDEFS,
+      plugins:{
+        ...CDEFS.plugins,
+        legend:{
+          display:true,position:'top',align:'end',
+          labels:{boxWidth:10,boxHeight:10,padding:14,
+            font:{size:11,family:"'Plus Jakarta Sans',sans-serif"},color:'#7d8590'}
+        },
+        tooltip:{
+          ...CDEFS.plugins.tooltip,
+          callbacks:{
+            label:ctx=>{
+              const d=data[ctx.dataIndex];
+              if(ctx.dataset.label==='Correct')
+                return ` Correct: ${ctx.parsed.y} / ${d.total}  (${d.rate??'—'}%)`;
+              return ` Target (95%): ${ctx.parsed.y}`;
+            }
+          }
+        }
+      }
+    }
+  };
   return <ChartEl config={cfg} height={220}/>;
 }
 function LineOT({data}) {
@@ -1050,8 +1099,8 @@ function App() {
           <div className="charts-row cr2">
             <div className="chart-card">
               <div className="cc-hdr"><div className="cc-title">Declaration Accuracy by Month</div>
-                <div className="cc-sub">By Cus Dec Date · Overall: {fmtPct(kpi.decAcc)}</div></div>
-              <div className="cw"><LineAcc data={accMo}/></div>
+                <div className="cc-sub">Correct count vs Target (95%) · Overall accuracy: {fmtPct(kpi.decAcc)}</div></div>
+              <div className="cw"><BarAcc data={accMo}/></div>
             </div>
             <div className="chart-card">
               <div className="cc-hdr"><div className="cc-title">Customs Channel Distribution</div>
