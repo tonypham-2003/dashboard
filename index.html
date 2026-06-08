@@ -313,9 +313,12 @@ async function loadFromSupabase() {
   const { data, error } = await sb
     .from('shipments')
     .select('*')
-    .order('no', { ascending: true });
+    .order('id', { ascending: true });
   if (error) throw error;
-  return (data || []).map(mapSupabaseRow);
+  const seen = new Set();
+  return (data || [])
+    .filter(r => { if (!r.no || seen.has(r.no)) return false; seen.add(r.no); return true; })
+    .map(mapSupabaseRow);
 }
 
 function mapSupabaseRow(r) {

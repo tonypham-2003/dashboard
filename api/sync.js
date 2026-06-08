@@ -37,10 +37,12 @@ module.exports = async function handler(req, res) {
 
     const supabase = createClient(SURL, SKEY);
 
+    // Use upsert-by-no to prevent race condition doubles (two syncs running simultaneously)
+    const deduped = [...new Map(rows.map(r => [r.no, r])).values()];
     const { error: delErr } = await supabase.from('shipments').delete().gte('id', 0);
     if (delErr) throw delErr;
 
-    const { error: insErr } = await supabase.from('shipments').insert(rows);
+    const { error: insErr } = await supabase.from('shipments').insert(deduped);
     if (insErr) throw insErr;
 
     await supabase.from('sync_log').insert({ rows_count: rows.length });
