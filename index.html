@@ -14,7 +14,7 @@
 <style>
 /* ── RESET & BASE ────────────────────────── */
 :root{
-  --sw:260px;
+  --nh:58px;
   --bg:#090a18;
   --surface:#11132a;
   --surface2:#191b38;
@@ -27,43 +27,33 @@
   --accent:#7c3aed;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--font);background:var(--bg);color:var(--dark);display:flex;min-height:100vh}
-
-/* ── SIDEBAR ─────────────────────────────── */
-.sidebar{
-  width:var(--sw);min-height:100vh;position:fixed;top:0;left:0;z-index:200;
-  background:linear-gradient(195deg,#141636,#090a18);
-  display:flex;flex-direction:column;padding:1.5rem 1rem;
-  border-right:1px solid var(--border);
-}
-.sb-logo{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem 1.5rem;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
-.sb-icon{width:2.25rem;height:2.25rem;border-radius:.6rem;background:linear-gradient(195deg,#c084fc,#7c3aed);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(124,58,237,.5)}
-.sb-icon svg{width:1.2rem;height:1.2rem;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.sb-brand{color:var(--dark);font-size:.9rem;font-weight:700;line-height:1.2}
-.sb-brand small{display:block;font-size:.7rem;font-weight:400;color:var(--muted)}
-.nav-sec{color:rgba(255,255,255,.3);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.5rem 1rem .3rem}
-.nav-link{display:flex;align-items:center;gap:.75rem;padding:.6rem 1rem;border-radius:.6rem;color:var(--muted);font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:.15rem;user-select:none;position:relative}
-.nav-link:hover{background:rgba(255,255,255,.06);color:var(--dark)}
-.nav-link.active{background:linear-gradient(90deg,rgba(124,58,237,.22),rgba(124,58,237,.06));color:#c084fc;border:1px solid rgba(124,58,237,.35);box-shadow:0 0 12px rgba(124,58,237,.1)}
-.nav-link svg{width:1rem;height:1rem;flex-shrink:0;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.nav-link.active svg{stroke:#c084fc}
-.sb-foot{margin-top:auto;padding-top:1rem;border-top:1px solid var(--border)}
-.sb-status{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;font-size:.72rem;color:var(--muted)}
+body{font-family:var(--font);background:var(--bg);color:var(--dark);min-height:100vh}
 .dot{width:.5rem;height:.5rem;border-radius:50%;flex-shrink:0;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
 
-/* ── MAIN ────────────────────────────────── */
-.main{margin-left:var(--sw);flex:1;min-height:100vh;display:flex;flex-direction:column}
-
-/* ── TOPBAR ──────────────────────────────── */
-.topbar{
-  background:rgba(9,10,22,.92);backdrop-filter:blur(12px);
-  padding:.8rem 1.5rem;display:flex;align-items:center;justify-content:space-between;
-  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;
+/* ── TOPNAV ──────────────────────────────── */
+.topnav{
+  height:var(--nh);position:fixed;top:0;left:0;right:0;z-index:200;
+  background:linear-gradient(90deg,#141636 0%,#0d0f24 60%,#090a18 100%);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 1.5rem;gap:0;
+  backdrop-filter:blur(12px);
 }
-.breadcrumb{font-size:.8rem;color:var(--muted)}
-.breadcrumb b{color:var(--dark)}
-.topbar-r{display:flex;align-items:center;gap:.75rem}
+.tn-logo{display:flex;align-items:center;gap:.75rem;padding-right:1.5rem;border-right:1px solid var(--border);flex-shrink:0}
+.tn-logo-icon{width:2.25rem;height:2.25rem;border-radius:.6rem;background:linear-gradient(195deg,#c084fc,#7c3aed);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(124,58,237,.5)}
+.tn-logo-icon svg{width:1.2rem;height:1.2rem;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tn-brand{color:var(--dark);font-size:.9rem;font-weight:700;line-height:1.2}
+.tn-brand small{display:block;font-size:.7rem;font-weight:400;color:var(--muted)}
+.tn-nav{display:flex;align-items:center;gap:.1rem;padding:0 1.25rem}
+.tn-link{display:flex;align-items:center;gap:.5rem;padding:.42rem .9rem;border-radius:.5rem;color:var(--muted);font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s;user-select:none;white-space:nowrap;border:1px solid transparent}
+.tn-link:hover{background:rgba(255,255,255,.06);color:var(--dark)}
+.tn-link.active{background:linear-gradient(90deg,rgba(124,58,237,.22),rgba(124,58,237,.06));color:#c084fc;border-color:rgba(124,58,237,.35);box-shadow:0 0 12px rgba(124,58,237,.1)}
+.tn-link svg{width:.9rem;height:.9rem;flex-shrink:0;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tn-link.active svg{stroke:#c084fc}
+.tn-right{margin-left:auto;display:flex;align-items:center;gap:.75rem;flex-shrink:0}
+
+/* ── MAIN ────────────────────────────────── */
+.main{margin-top:var(--nh);flex:1;min-height:calc(100vh - var(--nh));display:flex;flex-direction:column}
 .last-upd{font-size:.74rem;color:var(--muted)}
 .live-badge{display:flex;align-items:center;gap:.35rem;background:rgba(16,185,129,.12);color:#10b981;padding:.25rem .7rem;border-radius:2rem;font-size:.7rem;font-weight:800;letter-spacing:.06em;border:1px solid rgba(16,185,129,.2)}
 .live-dot{width:.45rem;height:.45rem;border-radius:50%;background:#10b981;animation:pulse 1.5s infinite}
@@ -154,17 +144,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--dark);display:flex
 /* ── KPI PANELS (2-column, 4 rows each) ──── */
 .kpi-panels{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
 .kpi-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
-.kpi-panel-hdr{padding:.5rem 1rem .45rem;border-bottom:1px solid var(--border);font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;background:var(--surface2)}
-.kpi-mini{display:flex;align-items:center;gap:.75rem;padding:.55rem 1rem;border-bottom:1px solid var(--border);transition:background .15s}
+.kpi-panel-hdr{padding:.6rem 1.25rem .55rem;border-bottom:1px solid var(--border);font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;background:var(--surface2)}
+.kpi-mini{display:flex;align-items:center;gap:.85rem;padding:.7rem 1.25rem;border-bottom:1px solid var(--border);transition:background .15s}
 .kpi-mini:last-child{border-bottom:none}
 .kpi-mini:hover{background:rgba(255,255,255,.025)}
-.km-ico{width:1.9rem;height:1.9rem;border-radius:.4rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3)}
-.km-ico svg{width:.82rem;height:.82rem;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.km-ico{width:2.5rem;height:2.5rem;border-radius:.55rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.km-ico svg{width:1.15rem;height:1.15rem;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .km-body{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
-.km-lbl{font-size:.63rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
-.km-vals{display:flex;align-items:baseline;gap:.4rem;flex-shrink:0}
-.km-abs{font-size:1.05rem;font-weight:700;color:var(--dark);line-height:1}
-.km-pct{font-size:.7rem;font-weight:600;min-width:3.5rem;text-align:right}
+.km-lbl{font-size:.65rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.km-vals{display:flex;align-items:baseline;gap:.45rem;flex-shrink:0}
+.km-abs{font-size:1.25rem;font-weight:700;color:var(--dark);line-height:1}
+.km-pct{font-size:.75rem;font-weight:600;min-width:3.5rem;text-align:right}
 .km-pct.up{color:#3fb950}.km-pct.dn{color:#f85149}.km-pct.wa{color:#e3b341}.km-pct.bl{color:#a78bfa}.km-pct.mu{color:var(--muted)}
 .g-dark{background:linear-gradient(135deg,#312e6b,#1e1b4b)}
 .g-blue{background:linear-gradient(135deg,#818cf8,#4f46e5)}
@@ -175,7 +165,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--dark);display:flex
 
 /* ── CHARTS ──────────────────────────────── */
 .charts-row{display:grid;gap:1.25rem;margin-bottom:1.25rem}
-.cr2{grid-template-columns:1fr 1fr;grid-auto-rows:300px}
+.cr2{grid-template-columns:1fr 1fr;grid-auto-rows:320px}
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:1.25rem 1.5rem;overflow:hidden;transition:border-color .2s;display:flex;flex-direction:column}
 .chart-card:hover{border-color:rgba(139,92,246,.2)}
 .cc-hdr{margin-bottom:.75rem;flex-shrink:0}
@@ -237,7 +227,7 @@ tr:hover td{background:rgba(255,255,255,.03)}
 
 /* ── RESPONSIVE ──────────────────────────── */
 @media(max-width:1100px){.kpi-panels{grid-template-columns:1fr}.cr2{grid-template-columns:1fr}}
-@media(max-width:768px){.sidebar{display:none}.main{margin-left:0}.kpi-grid{grid-template-columns:1fr}}
+@media(max-width:768px){.tn-brand small{display:none}.last-upd{display:none}}
 
 /* ── NOTICE ──────────────────────────────── */
 .notice{background:rgba(227,179,65,.08);border:1px solid rgba(227,179,65,.2);border-radius:.75rem;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:.82rem;color:#e3b341;display:flex;align-items:flex-start;gap:.75rem}
@@ -495,17 +485,23 @@ function ChartEl({config,height=220}) {
 }
 
 /* ─── ICONS ──────────────────────────────── */
-const IBox    = ()=><svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>;
-const IShip   = ()=><svg viewBox="0 0 24 24"><path d="M3 17l1.5-7L12 5l7.5 5L21 17H3zm9-12v5M5.5 10v4M18.5 10v4"/></svg>;
-const ITruck  = ()=><svg viewBox="0 0 24 24"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8zM5.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm13 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>;
-const IDoc    = ()=><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 13h8M8 17h5"/></svg>;
-const ICheck  = ()=><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>;
-const ITime   = ()=><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>;
-const IDash   = ()=><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>;
-const IRefresh=()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>;
-const IWarn   = ()=><svg viewBox="0 0 24 24"><path d="M12 2L2 19h20L12 2zm0 7v5m0 3v1"/></svg>;
+/* ─── ICONS (stroke-based, inherit via .km-ico svg / .tn-logo-icon svg CSS) ── */
+const IBox     = ()=><svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>;
+const IShip    = ()=><svg viewBox="0 0 24 24"><path d="M3 17l1.5-7L12 5l7.5 5L21 17H3zm9-12v5M5.5 10v4M18.5 10v4"/></svg>;
+const ITruck   = ()=><svg viewBox="0 0 24 24"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8zM5.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm13 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>;
+const IDoc     = ()=><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 13h8M8 17h5"/></svg>;
+const ICheck   = ()=><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>;
+const ITime    = ()=><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>;
+const IDash    = ()=><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>;
+const IRefresh = ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>;
+const IWarn    = ()=><svg viewBox="0 0 24 24"><path d="M12 2L2 19h20L12 2zm0 7v5m0 3v1"/></svg>;
 const IFilter  = ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>;
 const IChevron = ()=><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>;
+/* ── KPI-specific icons ── */
+const IAnchor  = ()=><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><path d="M12 8v14M5 11H2a10 10 0 0 0 20 0h-3"/><path d="M7 19l-5-8M17 19l5-8"/></svg>;
+const ICheckCircle=()=><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+const IBell    = ()=><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><circle cx="12" cy="3" r="1" fill="white" stroke="none"/></svg>;
+const IShield  = ()=><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>;
 
 function Badge({val}) {
   if(!val)return null;
@@ -961,41 +957,31 @@ function App() {
 
   return (
     <>
-      {/* SIDEBAR */}
-      <aside className="sidebar">
-        <div className="sb-logo">
-          <div className="sb-icon"><IShip/></div>
-          <div className="sb-brand">DP World<small>T&amp;C Dashboard</small></div>
+      {/* TOPNAV */}
+      <nav className="topnav">
+        <div className="tn-logo">
+          <div className="tn-logo-icon"><IShip/></div>
+          <div className="tn-brand">DP World<small>T&amp;C Dashboard</small></div>
         </div>
-        <div className="nav-sec">Menu</div>
-        <div className={`nav-link${view==='dashboard'?' active':''}`} onClick={()=>setView('dashboard')}><IDash/><span>Dashboard</span></div>
-        <div className={`nav-link${view==='shipments'?' active':''}`} onClick={()=>setView('shipments')}><ITruck/><span>Shipments</span></div>
-        <div className="sb-foot">
-          <div className="sb-status">
-            <div className="dot" style={{background:busy?'#e3b341':'#3fb950'}}/>
-            <span>{busy?'Updating…':'Live · '+(lu?new Date(lu).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'-')}</span>
-          </div>
+        <div className="tn-nav">
+          <div className={`tn-link${view==='dashboard'?' active':''}`} onClick={()=>setView('dashboard')}><IDash/><span>Dashboard</span></div>
+          <div className={`tn-link${view==='shipments'?' active':''}`} onClick={()=>setView('shipments')}><ITruck/><span>Shipments</span></div>
         </div>
-      </aside>
+        <div className="tn-right">
+          <div className="live-badge"><span className="live-dot"/>LIVE</div>
+          {lu&&<span className="last-upd">Updated {new Date(lu).toLocaleTimeString('en-GB')}</span>}
+          <LivePulse busy={busy}/>
+          <button className={`btn-refresh${busy?' spin':''}`} onClick={()=>fetchData(false)} disabled={busy}>
+            <IRefresh/>{busy?'Loading…':'Refresh'}
+          </button>
+          <SyncButton onDone={()=>fetchData(true)}/>
+        </div>
+      </nav>
 
       {toast&&<Toast msg={toast} onDismiss={toastDismiss}/>}
 
       {/* MAIN */}
       <div className="main">
-
-        {/* TOPBAR */}
-        <div className="topbar">
-          <div className="breadcrumb"><span>Home / </span><b>{view==='shipments'?'Shipments':'Overview Dashboard'}</b></div>
-          <div className="topbar-r">
-            <div className="live-badge"><span className="live-dot"/>LIVE</div>
-            {lu&&<span className="last-upd">Updated {new Date(lu).toLocaleTimeString('en-GB')}</span>}
-            <LivePulse busy={busy}/>
-            <button className={`btn-refresh${busy?' spin':''}`} onClick={()=>fetchData(false)} disabled={busy}>
-              <IRefresh/>{busy?'Loading…':'Refresh'}
-            </button>
-            <SyncButton onDone={()=>fetchData(true)}/>
-          </div>
-        </div>
 
         {/* FILTER BAR — two dropdown boxes */}
         <div className="filter-bar">
@@ -1125,7 +1111,7 @@ function App() {
                 </div>
               </div>
               <div className="kpi-mini">
-                <div className="km-ico g-orange"><IShip/></div>
+                <div className="km-ico g-orange"><IAnchor/></div>
                 <div className="km-body">
                   <span className="km-lbl">At Port</span>
                   <div className="km-vals">
@@ -1145,7 +1131,7 @@ function App() {
                 </div>
               </div>
               <div className="kpi-mini">
-                <div className="km-ico g-green"><ICheck/></div>
+                <div className="km-ico g-green"><ICheckCircle/></div>
                 <div className="km-body">
                   <span className="km-lbl">Delivered</span>
                   <div className="km-vals">
@@ -1170,7 +1156,7 @@ function App() {
                 </div>
               </div>
               <div className="kpi-mini">
-                <div className="km-ico g-red"><IWarn/></div>
+                <div className="km-ico g-red"><IBell/></div>
                 <div className="km-body">
                   <span className="km-lbl">Customer Complaints</span>
                   <div className="km-vals">
@@ -1190,7 +1176,7 @@ function App() {
                 </div>
               </div>
               <div className="kpi-mini">
-                <div className="km-ico" style={{background:kpi.decAcc>=90?'linear-gradient(135deg,#3fb950,#238636)':kpi.decAcc>=70?'linear-gradient(135deg,#bc8cff,#8957e5)':'linear-gradient(135deg,#f85149,#da3633)'}}><ICheck/></div>
+                <div className="km-ico" style={{background:kpi.decAcc>=90?'linear-gradient(135deg,#3fb950,#238636)':kpi.decAcc>=70?'linear-gradient(135deg,#bc8cff,#8957e5)':'linear-gradient(135deg,#f85149,#da3633)'}}><IShield/></div>
                 <div className="km-body">
                   <span className="km-lbl">Declaration Accuracy</span>
                   <div className="km-vals">
