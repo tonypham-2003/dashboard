@@ -431,6 +431,18 @@ function monthlyVolume(ships) {
   });
   return MONTHS.map(mo=>({label:mo,count:m[mo]||0}));
 }
+function quarterlyVolume(ships) {
+  const q=[0,0,0,0];
+  ships.filter(s=>s.eta).forEach(s=>{
+    const d=parseDate(s.eta); if(!d)return;
+    q[Math.floor(d.getMonth()/3)]++;
+  });
+  return q.map((count,i)=>({label:`Q${i+1}`,count}));
+}
+function yearlyVolume(ships) {
+  const count=ships.filter(s=>s.eta&&parseDate(s.eta)).length;
+  return [{label:'2026',count}];
+}
 function byGroup(ships,key) {
   const m={};
   ships.forEach(s=>{ if(s[key])m[s[key]]=(m[s[key]]||0)+1; });
@@ -594,11 +606,69 @@ function BarH({data}) {
       scales:{x:{...CDEFS.scales.x,grid:{color:'rgba(255,255,255,.05)'}},y:{grid:{display:false},ticks:{font:{size:11,family:"'Plus Jakarta Sans',sans-serif"},color:'#7d8590'}}}}};
   return <ChartEl config={cfg} height={180}/>;
 }
-function BarVol({data}) {
+const VOLGRANS = ['Month','Quarter','Year'];
+function BarVol({ships}) {
+  const [gran,setGran] = useState('Month');
+  const data = useMemo(()=>{
+    if(gran==='Quarter') return quarterlyVolume(ships);
+    if(gran==='Year')    return yearlyVolume(ships);
+    return monthlyVolume(ships);
+  },[ships,gran]);
+
+  const dlPlugin = useMemo(()=>({
+    id:'volDL',
+    afterDatasetsDraw(chart){
+      const ctx=chart.ctx;
+      chart.data.datasets.forEach((ds,i)=>{
+        chart.getDatasetMeta(i).data.forEach((bar,j)=>{
+          const v=ds.data[j]; if(!v)return;
+          ctx.save();
+          ctx.fillStyle='#c9d1d9';
+          ctx.font="600 10.5px 'Plus Jakarta Sans',sans-serif";
+          ctx.textAlign='center';ctx.textBaseline='bottom';
+          ctx.fillText(v,bar.x,bar.y-4);
+          ctx.restore();
+        });
+      });
+    }
+  }),[]);
+
   const max=Math.max(...data.map(d=>d.count),1);
-  const cfg={type:'bar',data:{labels:data.map(d=>d.label),datasets:[{data:data.map(d=>d.count),backgroundColor:data.map(d=>d.count===max?'rgba(88,166,255,.85)':'rgba(88,166,255,.25)'),hoverBackgroundColor:'rgba(88,166,255,.7)',borderRadius:6,borderSkipped:false}]},
-    options:{...CDEFS,plugins:{...CDEFS.plugins,tooltip:{...CDEFS.plugins.tooltip,callbacks:{label:ctx=>` ${ctx.parsed.y}`}}}}};
-  return <ChartEl config={cfg} height={180}/>;
+  const cfg={
+    type:'bar',
+    plugins:[dlPlugin],
+    data:{
+      labels:data.map(d=>d.label),
+      datasets:[{
+        data:data.map(d=>d.count||null),
+        backgroundColor:data.map(d=>d.count===max?'rgba(88,166,255,.85)':'rgba(88,166,255,.28)'),
+        hoverBackgroundColor:'rgba(88,166,255,.75)',
+        borderRadius:6,borderSkipped:false,
+        barPercentage:.45,categoryPercentage:.7,
+      }]
+    },
+    options:{
+      ...CDEFS,
+      layout:{padding:{top:22}},
+      plugins:{...CDEFS.plugins,tooltip:{...CDEFS.plugins.tooltip,callbacks:{label:ctx=>` ${ctx.parsed.y} containers`}}}
+    }
+  };
+  return (
+    <div>
+      <div style={{display:'flex',gap:'.25rem',justifyContent:'flex-end',marginBottom:'.5rem'}}>
+        {VOLGRANS.map(g=>(
+          <button key={g} onClick={()=>setGran(g)} style={{
+            padding:'.2rem .6rem',borderRadius:'2rem',fontFamily:'var(--font)',
+            border:`1px solid ${gran===g?'var(--accent)':'var(--border)'}`,
+            background:gran===g?'var(--accent)':'transparent',
+            color:gran===g?'#fff':'var(--muted)',
+            fontSize:'.68rem',fontWeight:gran===g?700:500,cursor:'pointer',transition:'all .15s'
+          }}>{g}</button>
+        ))}
+      </div>
+      <div style={{position:'relative',height:168}}><ChartEl config={cfg} height={168}/></div>
+    </div>
+  );
 }
 
 /* ─── TABLE ──────────────────────────────── */
@@ -846,7 +916,6 @@ function App() {
   const kpi=calcKPIs(filteredShips);
   const accMo=monthlyAccuracy(filteredShips);
   const otMo=monthlyOnTime(filteredShips);
-  const volMo=monthlyVolume(filteredShips);
   const portD=byGroup(filteredShips,'destinationPort');
   const plantD=byGroup(filteredShips,'plant');
 
@@ -1124,9 +1193,8 @@ function App() {
           {/* CHARTS ROW 3 */}
           <div className="charts-row cr2">
             <div className="chart-card">
-              <div className="cc-hdr"><div className="cc-title">Container Volume by Month</div>
-                <div className="cc-sub">Based on ETA</div></div>
-              <div className="cw"><BarVol data={volMo}/></div>
+              <div className="cc-hdr"><div className="cc-title">Container Volume</div></div>
+              <div className="cw"><BarVol ships={filteredShips}/></div>
             </div>
             <div className="chart-card">
               <div className="cc-hdr"><div className="cc-title">Containers by Plant</div>
