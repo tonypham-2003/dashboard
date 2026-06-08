@@ -175,14 +175,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--dark);display:flex
 
 /* ── CHARTS ──────────────────────────────── */
 .charts-row{display:grid;gap:1.25rem;margin-bottom:1.25rem}
-.cr2{grid-template-columns:1fr 1fr}
-.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:1.25rem 1.5rem;overflow:hidden;transition:border-color .2s}
+.cr2{grid-template-columns:1fr 1fr;grid-auto-rows:300px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:1.25rem 1.5rem;overflow:hidden;transition:border-color .2s;display:flex;flex-direction:column}
 .chart-card:hover{border-color:rgba(139,92,246,.2)}
-.cc-hdr{margin-bottom:1rem}
+.cc-hdr{margin-bottom:.75rem;flex-shrink:0}
 .cc-title{font-size:.85rem;font-weight:700;color:var(--dark)}
 .cc-sub{font-size:.72rem;color:var(--muted);margin-top:.15rem}
-.cw{position:relative;height:220px}.cw canvas{max-height:220px}
-.cw-sm{position:relative;height:180px}.cw-sm canvas{max-height:180px}
+.cw{position:relative;flex:1;min-height:0}
+.cw-sm{position:relative;flex:1;min-height:0}
 .donut-legend{display:flex;flex-direction:column;gap:.5rem;margin-top:.75rem}
 .dl-item{display:flex;align-items:center;justify-content:space-between;font-size:.78rem}
 .dl-dot{width:.65rem;height:.65rem;border-radius:50%;flex-shrink:0;margin-right:.5rem}
@@ -412,6 +412,26 @@ function monthlyAccuracy(ships) {
     rate:    m[mo]?+(m[mo].correct/m[mo].total*100).toFixed(1):null
   }));
 }
+function quarterlyAccuracy(ships) {
+  const q=[0,1,2,3].map(()=>({correct:0,total:0}));
+  ships.filter(s=>s.cusDecDate&&s.declarationStatus).forEach(s=>{
+    const d=parseDate(s.cusDecDate); if(!d)return;
+    q[Math.floor(d.getMonth()/3)].total++;
+    if(s.declarationStatus==='Correct')q[Math.floor(d.getMonth()/3)].correct++;
+  });
+  return q.map((d,i)=>({
+    label:`Q${i+1}`,correct:d.correct,total:d.total,
+    target:d.total?Math.round(d.total*.95):0,
+    rate:d.total?+(d.correct/d.total*100).toFixed(1):null
+  }));
+}
+function yearlyAccuracy(ships) {
+  let correct=0,total=0;
+  ships.filter(s=>s.cusDecDate&&s.declarationStatus).forEach(s=>{
+    total++; if(s.declarationStatus==='Correct')correct++;
+  });
+  return [{label:'2026',correct,total,target:Math.round(total*.95),rate:total?+(correct/total*100).toFixed(1):null}];
+}
 function monthlyOnTime(ships) {
   const m={};
   ships.filter(s=>s.eta&&s.ata).forEach(s=>{
@@ -471,7 +491,7 @@ function ChartEl({config,height=220}) {
     key.current=nk;
   },[nk]);
   useEffect(()=>()=>{if(ch.current)ch.current.destroy();},[]);
-  return <canvas ref={cvs} style={{maxHeight:height+'px'}} />;
+  return <canvas ref={cvs} style={{display:'block'}} />;
 }
 
 /* ─── ICONS ──────────────────────────────── */
@@ -532,8 +552,8 @@ function DonutChannels({g,y,r}) {
           callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} (${total?((ctx.parsed/total)*100).toFixed(1):0}%)`}}}}
   };
   return (
-    <div>
-      <div style={{height:180,position:'relative'}}><ChartEl config={cfg} height={180}/></div>
+    <div style={{display:'flex',flexDirection:'column',flex:1,minHeight:0}}>
+      <div style={{flex:1,minHeight:0,position:'relative'}}><ChartEl config={cfg} height={160}/></div>
       <div className="donut-legend">
         {[['Green Channel','#3fb950',g],['Yellow Channel','#e3b341',y],['Red Channel','#f85149',r]].map(([lb,col,n])=>(
           <div className="dl-item" key={lb}>
@@ -546,7 +566,14 @@ function DonutChannels({g,y,r}) {
   );
 }
 
-function BarAcc({data}) {
+const ACCGRANS = ['Month','Quarter','Year'];
+function BarAcc({ships}) {
+  const [gran,setGran] = useState('Month');
+  const data = useMemo(()=>{
+    if(gran==='Quarter') return quarterlyAccuracy(ships);
+    if(gran==='Year')    return yearlyAccuracy(ships);
+    return monthlyAccuracy(ships);
+  },[ships,gran]);
   const cfg={
     type:'bar',
     data:{
@@ -590,7 +617,22 @@ function BarAcc({data}) {
       }
     }
   };
-  return <ChartEl config={cfg} height={220}/>;
+  return (
+    <div>
+      <div style={{display:'flex',gap:'.25rem',justifyContent:'flex-end',marginBottom:'.5rem'}}>
+        {ACCGRANS.map(g=>(
+          <button key={g} onClick={()=>setGran(g)} style={{
+            padding:'.2rem .6rem',borderRadius:'2rem',fontFamily:'var(--font)',
+            border:`1px solid ${gran===g?'var(--accent)':'var(--border)'}`,
+            background:gran===g?'var(--accent)':'transparent',
+            color:gran===g?'#fff':'var(--muted)',
+            fontSize:'.68rem',fontWeight:gran===g?700:500,cursor:'pointer',transition:'all .15s'
+          }}>{g}</button>
+        ))}
+      </div>
+      <div style={{position:'relative',flex:1,minHeight:0,height:'100%'}}><ChartEl config={cfg} height={220}/></div>
+    </div>
+  );
 }
 function LineOT({data}) {
   const cfg={type:'line',data:{labels:data.map(d=>d.label),datasets:[{label:'On-Time (%)',data:data.map(d=>d.rate),borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.1)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#a78bfa',fill:true,tension:.4,spanGaps:false}]},
@@ -915,7 +957,6 @@ function App() {
   }
 
   const kpi=calcKPIs(filteredShips);
-  const accMo=monthlyAccuracy(filteredShips);
   const otMo=monthlyOnTime(filteredShips);
 
   return (
@@ -1165,9 +1206,9 @@ function App() {
           {/* CHARTS ROW 1 */}
           <div className="charts-row cr2">
             <div className="chart-card">
-              <div className="cc-hdr"><div className="cc-title">Declaration Accuracy by Month</div>
+              <div className="cc-hdr"><div className="cc-title">Declaration Accuracy</div>
                 <div className="cc-sub">Correct count vs Target (95%) · Overall accuracy: {fmtPct(kpi.decAcc)}</div></div>
-              <div className="cw"><BarAcc data={accMo}/></div>
+              <div className="cw"><BarAcc ships={filteredShips}/></div>
             </div>
             <div className="chart-card">
               <div className="cc-hdr"><div className="cc-title">Customs Channel Distribution</div>
