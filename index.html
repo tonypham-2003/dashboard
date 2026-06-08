@@ -807,7 +807,7 @@ function Table({ships}) {
                 const late=(()=>{const e=parseDate(s.eta),a=parseDate(s.ata);return e&&a&&dateOnly(a)>dateOnly(e);})();
                 return(
                   <tr key={s.no}>
-                    <td style={{color:'var(--muted)'}}>{s.no}</td>
+                    <td>{s.no}</td>
                     <td style={{fontWeight:600,color:'#c084fc'}}>{s.poNo}</td>
                     <td style={{fontFamily:'monospace',fontSize:'.76rem'}}>{s.containerNo}</td>
                     <td style={{fontFamily:'monospace',fontSize:'.76rem'}}>{s.blNo}</td>
@@ -818,7 +818,7 @@ function Table({ships}) {
                     <td style={{color:late?'#f85149':'inherit',fontWeight:late?600:400}}>{s.ata}{late&&' ⚠'}</td>
                     <td><Badge val={s.declarationStatus}/></td>
                     <td><Badge val={s.customsLine}/></td>
-                    <td style={{fontSize:'.72rem',color:'var(--muted)'}}>{s.customsClearanceDate}</td>
+                    <td style={{fontSize:'.72rem'}}>{s.customsClearanceDate}</td>
                     <td><Badge val={s.pickupAtPort}/></td>
                     <td><Badge val={s.deliverToPlant}/></td>
                     <td>{s.customerComplaint&&s.customerComplaint!=='No Complaint'
