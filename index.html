@@ -313,7 +313,7 @@ async function loadFromSupabase() {
   const { data, error } = await sb
     .from('shipments')
     .select('*')
-    .order('id', { ascending: true });
+    .order('id', { ascending: false });
   if (error) throw error;
   const seen = new Set();
   return (data || [])
@@ -770,7 +770,7 @@ function Table({ships}) {
     if(lf&&s.customsLine!==lf)return false;
     if(df&&s.declarationStatus!==df)return false;
     return true;
-  }).sort((a,b)=>parseInt(a.no||'0')-parseInt(b.no||'0'));
+  }).sort((a,b)=>parseInt(b.no||'0')-parseInt(a.no||'0'));
   const tp=Math.max(1,Math.ceil(rows.length/PAGE));
   const p=Math.min(pg,tp);
   const slice=rows.slice((p-1)*PAGE,p*PAGE);
