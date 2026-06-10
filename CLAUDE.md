@@ -54,7 +54,7 @@ git push origin main
 
 `getRange(3, 2, lastRow-2, 22)` — starts row 3, col B. `r[1]` = `po_no` is the filter key (skip if empty).
 
-`r[0]`=no · `r[1]`=po_no · `r[2]`=invoice_no · `r[3]`=container_no · `r[4]`=bl_no · `r[5]`=cus_dec_no · `r[6]`=destination_port · `r[7]`=plant · `r[8]`=doc_rec_date · `r[9]`=eta · `r[10]`=ata · `r[11]`=cus_dec_date · `r[12]`=declaration_status · `r[13]`=customs_line · `r[14]`=tax_pay_date · `r[15]`=completed_cus_inspection · `r[16]`=customs_clearance_date · `r[17]`=truck_plate · `r[18]`=driver_telephone · `r[19]`=pickup_at_port · `r[20]`=deliver_to_plant · `r[21]`=customer_complaint
+`r[0]`=no · `r[1]`=po_no · `r[2]`=invoice_no · `r[3]`=container_no · `r[4]`=bl_no · `r[5]`=cus_dec_no · `r[6]`=destination_port · `r[7]`=plant · `r[8]`=doc_rec_date · `r[9]`=cus_dec_date · `r[10]`=declaration_status · `r[11]`=customs_line · `r[12]`=tax_pay_date · `r[13]`=completed_cus_inspection · `r[14]`=customs_clearance_date · `r[15]`=truck_plate · `r[16]`=driver_telephone · `r[17]`=pickup_at_port · `r[18]`=deliver_to_plant · `r[19]`=eta · `r[20]`=ata · `r[21]`=customer_complaint
 
 ---
 
