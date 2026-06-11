@@ -7,6 +7,15 @@
 
 var VERCEL_SYNC_URL = 'https://dashboard-red-mu-51.vercel.app/api/sync';
 var SYNC_SECRET     = 'tc2026secret';
+var DATE_MONTHS     = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function fmtCell(val) {
+  if (val instanceof Date) {
+    var h = val.getHours(), mn = val.getMinutes();
+    return (h<10?'0'+h:h) + ':' + (mn<10?'0'+mn:mn) + ' - ' + val.getDate() + ' ' + DATE_MONTHS[val.getMonth()];
+  }
+  return String(val == null ? '' : val).trim();
+}
 
 var COLS = [
   'no','po_no','invoice_no','container_no','bl_no','cus_dec_no','destination_port','plant',
@@ -33,7 +42,7 @@ function syncNow() {
       .map(function(r) {
         var obj = {};
         COLS.forEach(function(col, i) {
-          obj[col] = String(r[i] == null ? '' : r[i]).trim();
+          obj[col] = fmtCell(r[i]);
         });
         return obj;
       });

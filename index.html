@@ -342,10 +342,11 @@ function mapRow(r) { return Object.fromEntries(FIELDS.map((f,i)=>[f, r[i]||'']))
 
 function parseDate(str) {
   if (!str || !str.trim()) return null;
-  const m = str.trim().match(/^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2})\s+(\w{3})$/);
+  const m = str.trim().match(/^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2})\s+(\w{3})(?:\s+(\d{4}))?$/);
   if (!m) return null;
   const mo = MO_MAP[m[4]]; if (mo===undefined) return null;
-  return new Date(2026, mo, +m[3], +m[1], +m[2]);
+  const yr = m[5] ? +m[5] : new Date().getFullYear();
+  return new Date(yr, mo, +m[3], +m[1], +m[2]);
 }
 function dateOnly(d) { return d ? new Date(d.getFullYear(),d.getMonth(),d.getDate()) : null; }
 function daysBetween(a,b) { return (!a||!b) ? null : Math.round((b-a)/86400000); }
@@ -370,10 +371,10 @@ function calcKPIs(ships) {
   const decAcc          = declarations>0 ? (correct/declarations*100) : 0;
   // Complaints = customerComplaint exists and is not "No Complaint"
   const complaints      = ships.filter(s=>s.customerComplaint&&s.customerComplaint!=='No Complaint').length;
-  // On-time = ATA <= ETA (date only)
+  // On-time = ATA <= ETA (full datetime including hours)
   const withDates       = ships.filter(s=>s.eta&&s.ata);
   const onTime          = withDates.filter(s=>{
-    const e=dateOnly(parseDate(s.eta)),a=dateOnly(parseDate(s.ata));
+    const e=parseDate(s.eta),a=parseDate(s.ata);
     return e&&a&&a<=e;
   }).length;
   const onTimeRate = withDates.length>0 ? (onTime/withDates.length*100) : 0;
@@ -431,7 +432,7 @@ function monthlyOnTime(ships) {
     const d=parseDate(s.eta); if(!d)return;
     const k=MONTHS[d.getMonth()];
     if(!m[k])m[k]={ok:0,t:0}; m[k].t++;
-    const e=dateOnly(d),a=dateOnly(parseDate(s.ata));
+    const e=d,a=parseDate(s.ata);
     if(a&&a<=e)m[k].ok++;
   });
   return MONTHS.map(mo=>({label:mo,rate:m[mo]?+(m[mo].ok/m[mo].t*100).toFixed(1):null,n:m[mo]?.t||0}));
@@ -807,7 +808,7 @@ function Table({ships}) {
             {slice.length===0
               ? <tr><td colSpan={15} style={{textAlign:'center',color:'var(--muted)',padding:'2rem'}}>No matching records</td></tr>
               : slice.map(s=>{
-                const late=(()=>{const e=parseDate(s.eta),a=parseDate(s.ata);return e&&a&&dateOnly(a)>dateOnly(e);})();
+                const late=(()=>{const e=parseDate(s.eta),a=parseDate(s.ata);return e&&a&&a>e;})();
                 return(
                   <tr key={s.no}>
                     <td>{s.no}</td>
